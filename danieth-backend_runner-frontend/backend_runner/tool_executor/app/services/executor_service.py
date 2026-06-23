@@ -182,3 +182,20 @@ class ExecutorService:
             raise NotFoundException(detail=f"Tarea {tarea_id} no encontrada")
         resultado = await ResultadoRepository.obtener_por_tarea(session, tarea_id)
         return tarea, resultado
+
+    @staticmethod
+    async def listar_tareas(session, limite: int = 20):
+        tareas = await TareaRepository.listar_recientes(session, limite)
+        return [
+            {
+                "tarea_id": t.id,
+                "estado": t.estado,
+                "nombre_herramienta": t.nombre_herramienta,
+                "input_params": t.input_params,
+                "fallback_usado": t.fallback_usado,
+                "codigo_salida": t.codigo_salida,
+                "duracion_segundos": t.duracion_segundos,
+                "mensaje_error": t.mensaje_error,
+            }
+            for t in tareas
+        ]

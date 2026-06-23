@@ -22,6 +22,12 @@ async def ejecutar_herramienta(
     }
 
 
+@router.get("/tareas")
+async def listar_tareas(limite: int = 20, session: AsyncSession = Depends(get_db)):
+    tareas = await ExecutorService.listar_tareas(session, limite)
+    return tareas
+
+
 @router.get("/tareas/{tarea_id}")
 async def obtener_tarea(tarea_id: int, session: AsyncSession = Depends(get_db)):
     tarea, resultado = await ExecutorService.obtener_tarea(session, tarea_id)

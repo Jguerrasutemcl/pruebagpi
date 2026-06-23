@@ -85,6 +85,77 @@ HERRAMIENTAS = [
         }
     },
     {
+        "nombre": "curl",
+        "nombre_UI": "cURL",
+        "descripcion": "Realiza peticiones HTTP/HTTPS a URLs objetivo",
+        "categoria": "reconocimiento",
+        "casos_usos": ["hacer peticiones HTTP", "inspeccionar headers de respuesta", "testear endpoints REST", "enviar POST con datos"],
+        "version_inicial": "1.0.0",
+        "docker_imagen": "backend_runner-curl",
+        "esquema_input": {
+            "url": {"type": "string", "required": True, "description": "URL objetivo"},
+            "metodo": {"type": "string", "required": False, "default": "GET", "description": "Método HTTP: GET, POST, PUT, DELETE"},
+            "headers": {"type": "object", "required": False, "default": {}, "description": "Headers HTTP clave-valor"},
+            "data": {"type": "string", "required": False, "default": "", "description": "Body de la petición"},
+            "flags_extra": {"type": "string", "required": False, "default": "", "description": "Flags adicionales de curl ej: --insecure"}
+        },
+        "esquema_output": {
+            "url": {"type": "string"},
+            "metodo": {"type": "string"},
+            "resultado": {
+                "stdout": {"type": "string"},
+                "stderr": {"type": "string"}
+            },
+            "codigo_salida": {"type": "integer"},
+            "error": {"type": "string"}
+        }
+    },
+    {
+        "nombre": "ls",
+        "nombre_UI": "ls",
+        "descripcion": "Lista archivos y directorios de una ruta dentro del container",
+        "categoria": "reconocimiento",
+        "casos_usos": ["listar archivos de un directorio", "explorar estructura de carpetas"],
+        "version_inicial": "1.0.0",
+        "docker_imagen": "backend_runner-ls",
+        "esquema_input": {
+            "ruta": {"type": "string", "required": False, "default": ".", "description": "Ruta a listar"},
+            "flags": {"type": "string", "required": False, "default": "-la", "description": "Flags de ls ej: -la, -lh"}
+        },
+        "esquema_output": {
+            "ruta": {"type": "string"},
+            "resultado": {
+                "archivos": {"type": "array"},
+                "total": {"type": "integer"},
+                "raw": {"type": "string"}
+            },
+            "codigo_salida": {"type": "integer"},
+            "error": {"type": "string"}
+        }
+    },
+    {
+        "nombre": "cat",
+        "nombre_UI": "cat",
+        "descripcion": "Muestra el contenido de un archivo dentro del container",
+        "categoria": "reconocimiento",
+        "casos_usos": ["leer contenido de un archivo", "inspeccionar archivos de configuración"],
+        "version_inicial": "1.0.0",
+        "docker_imagen": "backend_runner-cat",
+        "esquema_input": {
+            "archivo": {"type": "string", "required": True, "description": "Ruta del archivo a leer"},
+            "flags": {"type": "string", "required": False, "default": "", "description": "Flags de cat ej: -n para numerar líneas"}
+        },
+        "esquema_output": {
+            "archivo": {"type": "string"},
+            "resultado": {
+                "contenido": {"type": "string"},
+                "lineas": {"type": "integer"}
+            },
+            "codigo_salida": {"type": "integer"},
+            "error": {"type": "string"}
+        }
+    },
+    {
         "nombre": "xsstrike",
         "nombre_UI": "XSStrike",
         "descripcion": "Detección de vulnerabilidades XSS",

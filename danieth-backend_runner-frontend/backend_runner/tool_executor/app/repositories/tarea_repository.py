@@ -92,6 +92,12 @@ class TareaRepository:
         result = await session.execute(query)
         return result.scalar_one_or_none()
 
+    @staticmethod
+    async def listar_recientes(session: AsyncSession, limite: int = 20):
+        query = select(TareaEscaneo).order_by(TareaEscaneo.id.desc()).limit(limite)
+        result = await session.execute(query)
+        return result.scalars().all()
+
 
 class ResultadoRepository:
 

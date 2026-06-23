@@ -17,9 +17,7 @@ docker compose up --build -d
 
 Write-Output ""
 Write-Output "=== Sistema listo ==="
-Write-Output "api_gateway    -> http://localhost:8000/docs"
-Write-Output "auth_service   -> http://localhost:8001/docs"
-Write-Output "analysis       -> http://localhost:8002/docs"
+Write-Output "api_gateway    -> http://localhost:8002/docs"
 Write-Output "tool_registry  -> http://localhost:8003/docs"
 Write-Output "tool_executor  -> http://localhost:8004/docs"
 Write-Output ""

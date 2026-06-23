@@ -15,39 +15,12 @@ services:
       dockerfile: api_gateway/Dockerfile
     container_name: runner-api-gateway
     ports:
-      - "8010:8000"
+      - "8002:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - redis
-      - auth_service
       - tool_executor
-    restart: unless-stopped
-
-  auth_service:
-    build:
-      context: .
-      dockerfile: auth_service/Dockerfile
-    container_name: runner-auth
-    ports:
-      - "8011:8001"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  analysis_service:
-    build:
-      context: .
-      dockerfile: analysis_service/Dockerfile
-    container_name: runner-analysis
-    ports:
-      - "8002:8002"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - redis
     restart: unless-stopped
 
   tool_registry:
@@ -96,6 +69,30 @@ services:
       - tool_registry
     restart: unless-stopped
 
+  tool_curl:
+    build:
+      context: tools/curl
+      dockerfile: Dockerfile
+    image: backend_runner-curl
+    container_name: runner-tool-curl-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_ls:
+    build:
+      context: tools/ls
+      dockerfile: Dockerfile
+    image: backend_runner-ls
+    container_name: runner-tool-ls-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_cat:
+    build:
+      context: tools/cat
+      dockerfile: Dockerfile
+    image: backend_runner-cat
+    container_name: runner-tool-cat-builder
+    entrypoint: ["echo", "imagen lista"]
+
   tool_nmap:
     build:
       context: tools/nmap
@@ -126,4 +123,45 @@ services:
       dockerfile: Dockerfile
     image: backend_runner-xsstrike
     container_name: runner-tool-xsstrike-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_gobuster:
+    build:
+      context: tools/gobuster
+      dockerfile: Dockerfile
+    image: backend_runner-gobuster
+    container_name: runner-tool-gobuster-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_nikto:
+    build:
+      context: tools/nikto
+      dockerfile: Dockerfile
+    image: backend_runner-nikto
+    container_name: runner-tool-nikto-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_hydra:
+    build:
+      context: tools/hydra
+      dockerfile: Dockerfile
+    image: backend_runner-hydra
+    container_name: runner-tool-hydra-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  tool_radare2:
+    build:
+      context: tools/radare2
+      dockerfile: Dockerfile
+    image: backend_runner-radare2
+    container_name: runner-tool-radare2-builder
+    entrypoint: ["echo", "imagen lista"]
+
+  
+  tool_osquery:
+    build:
+      context: tools/osquery
+      dockerfile: Dockerfile
+    image: backend_runner-osquery
+    container_name: runner-tool-osquery-builder
     entrypoint: ["echo", "imagen lista"]

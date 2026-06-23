@@ -2,15 +2,27 @@ import sys
 import json
 import subprocess
 
-
 def main():
     params = json.loads(sys.argv[1])
 
     objetivo = params["objetivo"]
-    templates = params.get("templates", [])
-    severidad = params.get("severidad", [])
+    
+    # 🛠️ PARCHE: Si llega como texto, lo cortamos por las comas para hacer una lista
+    raw_templates = params.get("templates", [])
+    if isinstance(raw_templates, str):
+        templates = [t.strip() for t in raw_templates.split(",") if t.strip()]
+    else:
+        templates = raw_templates
+
+    raw_severidad = params.get("severidad", [])
+    if isinstance(raw_severidad, str):
+        severidad = [s.strip() for s in raw_severidad.split(",") if s.strip()]
+    else:
+        severidad = raw_severidad
+
     rate_limit = params.get("rate_limit", 150)
 
+    # Armado del comando
     cmd = ["nuclei", "-u", objetivo, "-rate-limit", str(rate_limit), "-j", "-silent", "-timeout", "10", "-max-host-error", "3"]
     if templates:
         for t in templates:
@@ -18,6 +30,7 @@ def main():
     if severidad:
         cmd.extend(["-severity", ",".join(severidad)])
 
+    # Ejecución
     resultado = subprocess.run(cmd, capture_output=True, text=True, timeout=800)
 
     vulnerabilidades = []
@@ -56,7 +69,6 @@ def main():
     }
 
     print(json.dumps(output))
-
 
 if __name__ == "__main__":
     main()

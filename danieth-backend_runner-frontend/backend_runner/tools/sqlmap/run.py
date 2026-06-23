@@ -70,10 +70,10 @@ def main():
         "resultado": {
             "vulnerable": vulnerable,
             "inyecciones_detectadas": inyecciones,
-            "raw_output": texto[-3000:] if len(texto) > 3000 else texto
+            "raw_output": texto
         },
         "codigo_salida": resultado.returncode,
-        "error": resultado.stderr if resultado.returncode != 0 else None
+        "error": resultado.stderr if resultado.returncode != 0 and not vulnerable else None
     }
 
     print(json.dumps(output))
