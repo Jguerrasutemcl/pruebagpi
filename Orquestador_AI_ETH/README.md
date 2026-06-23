@@ -45,7 +45,7 @@ Encuentra 1 flag con formato flag{...} en el sistema objetivo.
 
 ```bash
 cd orchestrator
-uvicorn main:app --reload --port 8001   # docs interactivas: http://127.0.0.1:8001/docs
+uvicorn main:app --reload        # docs interactivas: http://127.0.0.1:8000/docs
 ```
 
 ### 4. Controlar la campaña (endpoints)

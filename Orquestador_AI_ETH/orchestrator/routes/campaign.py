@@ -1,29 +1,40 @@
 """Endpoints de control del orquestador (campaña de exploración).
 
-Arquitectura de sesión única: el campaign_id recibido del Backend se acepta
-en la URL pero se ignora internamente — el CampaignManager gestiona una sola
-sesión activa. El soporte multi-campaña se añadirá en una versión posterior.
+Sesión única: por ahora no se usa id de campaña. El control multi-campaña
+con identificadores se añadirá más adelante.
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 from core.campaign_manager import campaign_manager
+from core.reports_handler import listar_reportes, obtener_reporte
 from config import SESION_ID
 
 router = APIRouter(prefix="/campaign", tags=["campaign"])
 
 
 class IniciarCampaña(BaseModel):
-    # extra="ignore" absorbe los campos adicionales que manda el Backend
-    # (target_id, scan_type, scope) sin levantar un error de validación.
-    model_config = ConfigDict(extra="ignore")
-
     target: str = Field(..., description="IP o host objetivo (entorno autorizado)")
     sesion_id: int = Field(SESION_ID, description="ID de sesión del runner")
 
 
-# ── Control de campaña ─────────────────────────────────────────────────────────
+class ReporteResumen(BaseModel):
+    id: str = Field(..., description="Identificador del reporte (timestamp)")
+    fecha: str = Field(..., description="Fecha legible 'YYYY-MM-DD HH:MM:SS'")
+    target: str = Field(..., description="Objetivo evaluado")
+    mision: str = Field("", description="Misión de la campaña")
+    iteraciones: int | None = Field(None, description="Nº de iteraciones (null si es un reporte antiguo sin metadata)")
+
+
+class ListaReportes(BaseModel):
+    reportes: list[ReporteResumen]
+
+
+class ReporteCompleto(ReporteResumen):
+    archivo_md: str = Field(..., description="Nombre del archivo .md")
+    contenido: str = Field(..., description="Contenido completo del reporte en markdown")
+
 
 @router.post("/start")
 def iniciar(payload: IniciarCampaña):
@@ -35,21 +46,11 @@ def iniciar(payload: IniciarCampaña):
     return campaign_manager.estado_actual()
 
 
-@router.post("/{campaign_id}/pause")
-def pausar(campaign_id: str):
+@router.post("/pause")
+def pausar():
     """Pausa la campaña en curso (toma efecto en el próximo checkpoint)."""
     try:
         campaign_manager.pausar()
-    except RuntimeError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    return campaign_manager.estado_actual()
-
-
-@router.post("/{campaign_id}/stop")
-def detener(campaign_id: str):
-    """Detiene la campaña en curso (toma efecto en el próximo checkpoint)."""
-    try:
-        campaign_manager.detener()
     except RuntimeError as e:
         raise HTTPException(status_code=409, detail=str(e))
     return campaign_manager.estado_actual()
@@ -65,65 +66,35 @@ def reanudar():
     return campaign_manager.estado_actual()
 
 
-@router.get("/{campaign_id}/status")
-def estado(campaign_id: str):
-    """Devuelve el estado actual del orquestador para la campaña indicada."""
+@router.post("/stop")
+def detener():
+    """Detiene la campaña en curso (toma efecto en el próximo checkpoint)."""
+    try:
+        campaign_manager.detener()
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     return campaign_manager.estado_actual()
 
 
-# ── Hallazgos y remediación por campaña ───────────────────────────────────────
-
-@router.get("/{campaign_id}/findings")
-def get_findings(
-    campaign_id: str,
-    severity: str | None = Query(None),
-    status: str | None = Query(None),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-) -> dict:
-    """Hallazgos de la campaña activa, con filtros opcionales de severidad y estado."""
-    findings = campaign_manager.get_findings(severity=severity, status=status)
-    total = len(findings)
-    page = findings[offset: offset + limit]
-    return {
-        "campaign_id": campaign_id,
-        "findings": page,
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-    }
+@router.get("/status")
+def estado():
+    """Devuelve el estado actual del orquestador."""
+    return campaign_manager.estado_actual()
 
 
-@router.get("/{campaign_id}/remediation-plan")
-def get_remediation_plan(campaign_id: str) -> dict:
-    """Plan de remediación basado en los hallazgos actuales de la campaña."""
-    findings = campaign_manager.get_findings()
-    steps = [
-        {
-            "step": i + 1,
-            "finding_id": f.get("id"),
-            "title": f.get("title", ""),
-            "severity": f.get("severity", "low"),
-            "recommendation": f.get("recommendation", ""),
-            "status": "pending",
-        }
-        for i, f in enumerate(findings)
-    ]
-    return {
-        "campaign_id": campaign_id,
-        "steps": steps,
-        "total": len(steps),
-    }
+# --- Reportes ejecutivos ---------------------------------------------------
+# La ruta exacta /reports debe declararse antes que /reports/{id}.
+
+@router.get("/reports", response_model=ListaReportes)
+def reportes():
+    """Lista todos los reportes ejecutivos (más nuevos primero)."""
+    return {"reportes": listar_reportes()}
 
 
-@router.get("/{campaign_id}/report")
-def get_report(campaign_id: str) -> dict:
-    """Ruta del reporte final generado (disponible cuando la campaña finaliza)."""
-    estado = campaign_manager.estado_actual()
-    ruta = estado.get("ruta_reporte")
-    return {
-        "campaign_id": campaign_id,
-        "status": estado.get("status"),
-        "report_path": ruta,
-        "available": ruta is not None,
-    }
+@router.get("/reports/{id}", response_model=ReporteCompleto)
+def reporte(id: str):
+    """Devuelve el contenido completo de un reporte por su id (timestamp)."""
+    datos = obtener_reporte(id)
+    if datos is None:
+        raise HTTPException(status_code=404, detail=f"Reporte '{id}' no encontrado")
+    return datos

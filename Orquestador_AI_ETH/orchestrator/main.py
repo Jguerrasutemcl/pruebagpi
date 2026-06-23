@@ -1,29 +1,33 @@
-"""Punto de entrada de la API REST del Orquestador Dani-ETH.
+"""Punto de entrada de la API REST de Dani-ETH.
 
 Ejecutar desde el directorio orchestrator/:
 
-    uvicorn main:app --reload --port 8001
+    uvicorn main:app --reload
 
-Documentación interactiva en http://127.0.0.1:8001/docs
+Documentación interactiva en http://127.0.0.1:8000/docs
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# Imports SIN punto relativo: uvicorn main:app resuelve desde el directorio
-# orchestrator/, así que los módulos se encuentran como paquetes normales.
-from routes.campaign  import router as campaign_router
-from routes.findings  import router as findings_router
-from routes.dashboard import router as dashboard_router
+from config import CORS_ORIGINS
+from routes.campaign import router as campaign_router
 
-app = FastAPI(
-    title="Dani-ETH Orchestrator API",
-    description="Orquestador de IA para campañas de pentesting ético.",
-    version="1.0.0",
+app = FastAPI(title="Dani-ETH Orchestrator API")
+
+# CORS: permite que el frontend (otro origen) consuma la API desde el navegador.
+# allow_headers=["*"] es imprescindible para aceptar la cabecera 'Authorization'
+# del token JWT de Firebase en el preflight. No se usa allow_origins=["*"] junto
+# a allow_credentials=True (combinación que el navegador rechaza).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(campaign_router)
-app.include_router(findings_router)
-app.include_router(dashboard_router)
 
 
 @app.get("/")
