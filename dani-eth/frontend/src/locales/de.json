@@ -1,0 +1,370 @@
+{
+  "app": {
+    "name": "DANI-ETH",
+    "tagline": "Automatisierte Ethical-Hacking-Plattform"
+  },
+  "common": {
+    "loading": "Laden...",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "search": "Suchen",
+    "comingSoon": "Demnächst",
+    "comingSoonDescription": "Dieser Bereich wird gerade entwickelt. Wir bauen ihn in den nächsten Sprints."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "vulnerabilities": "Schwachstellenzentrale",
+    "aiPentesting": "KI-Pentesting",
+    "patches": "Patch-Manager",
+    "team": "Team und Assets",
+    "reports": "Berichte",
+    "settings": "Einstellungen",
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen",
+    "toggleTheme": "Design wechseln",
+    "toggleThemeDark": "Zum Dunkelmodus wechseln",
+    "toggleThemeLight": "Zum Hellmodus wechseln",
+    "language": "Sprache"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Sicherheitszentrale — Metriken und Schwachstellen in Echtzeit",
+      "riskScore": "Risikobewertung",
+      "criticalIssues": "Kritische Probleme",
+      "highPriority": "Hohe Priorität",
+      "resolvedThisMonth": "Diesen Monat gelöst",
+      "requiresImmediateAction": "Erfordert sofortige Maßnahmen",
+      "escalateWithinSla": "Innerhalb des SLA eskalieren",
+      "remediationCompleted": "Behebung abgeschlossen",
+      "recentVulnerabilities": "Neueste Schwachstellen",
+      "viewAll": "Alle anzeigen",
+      "description2": "Beschreibung",
+      "asset": "Asset",
+      "severity": "Schweregrad",
+      "status": "Status",
+      "noData": "Noch keine Daten",
+      "noDataHint": "Daten erscheinen hier, sobald das Backend verbunden ist.",
+      "vulnDetail": "Schwachstellen-Detail",
+      "published": "Veröffentlicht",
+      "analyzeWithAI": "Mit KI analysieren",
+      "viewInHub": "In der Schwachstellenzentrale ansehen",
+      "cveId": "CVE-ID",
+      "riskHeatmap": "Risiko-Heatmap",
+      "patchProgress": "Patch-Fortschritt",
+      "activeScans": "Aktive Scans",
+      "latestFindings": "Neueste {{count}} Funde",
+      "orderedBySeverityAndIssueCount": "Nach Schweregrad und Anzahl der Probleme sortiert",
+      "openManager": "Manager öffnen",
+      "openEngine": "Engine öffnen",
+      "completed": "{{done}}/{{total}} abgeschlossen",
+      "realTimeOverview": "Echtzeitübersicht Ihrer Sicherheitslage",
+      "liveConnected": "Live-WebSocket verbunden",
+      "mockFallback": "Mock-Fallback-Modus",
+      "noWidgetData": "Momentan nicht verfügbar.",
+      "retry": "Erneut versuchen",
+      "loadWidgetsError": "Die Dashboard-Widgets konnten nicht geladen werden.",
+      "riskScoreError": "Die Risikobewertung konnte nicht geladen werden.",
+      "quickStats": "Schnellstatistiken",
+      "quickStatsError": "Die Schnellstatistiken konnten nicht geladen werden.",
+      "heatmapError": "Die Risiko-Heatmap konnte nicht geladen werden.",
+      "recentError": "Die neuesten Schwachstellen konnten nicht geladen werden.",
+      "patchError": "Der Patch-Fortschritt konnte nicht geladen werden.",
+      "scansError": "Die aktiven Scans konnten nicht geladen werden.",
+      "previousScore": "Vorheriger Score",
+      "change": "Änderung",
+      "trend": "Trend",
+      "issues": "Probleme",
+      "clickToFilter": "Klicken Sie, um in der Schwachstellenzentrale zu filtern",
+      "segment": "Segment",
+      "detected": "Erkannt",
+      "titleCol": "Titel",
+      "realTimeStatus": "Echtzeit-Ausführungsstatus",
+      "eta": "Restzeit",
+      "progress": "Fortschritt",
+      "running": "Läuft",
+      "paused": "Pausiert",
+      "queued": "In Warteschlange",
+      "open": "Offen",
+      "inProgress": "In Bearbeitung",
+      "resolved": "Behoben",
+      "increasing": "Steigend",
+      "decreasing": "Sinkend",
+      "stable": "Stabil",
+      "critical": "Kritisch",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig",
+      "webApplications": "Webanwendungen",
+      "databases": "Datenbanken",
+      "apis": "APIs",
+      "cloudInfrastructure": "Cloud-Infrastruktur",
+      "networkDevices": "Netzwerkgeräte",
+      "containers": "Container",
+      "mobileApps": "Mobile Apps",
+      "cvss": "CVSS",
+      "remediationPlan": "Behebungsplan",
+      "remediationStep1": "1. Betroffenen Endpunkt oder die Exposition des Assets validieren.",
+      "remediationStep2": "2. Patch oder Code-Behebung in der Staging-Umgebung anwenden.",
+      "remediationStep3": "3. Mit Sicherheitsscanner und manueller Prüfung erneut testen.",
+      "remediationStep4": "4. Den Fund schließen, nachdem der Nachweis der Behebung hochgeladen wurde."
+    },
+    "vulnerabilities": {
+      "title": "Schwachstellenzentrale",
+      "description": "Zentralisierte Verwaltung erkannter Schwachstellen",
+      "emptyServers": "Simulierte Server-Schwachstellen. Klicken Sie auf andere Tabs, um Daten anzeigen.",
+      "tabs": {
+        "network": "Netzwerk und Perimeter",
+        "applications": "Anwendungen und Web",
+        "servers": "Server und Dienste"
+      },
+      "filters": {
+        "search": "Schwachstellen suchen...",
+        "allSeverities": "Alle Schweregrade",
+        "critical": "Kritisch",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig",
+        "sortBy": "Sortieren nach...",
+        "sortHighLow": "Schweregrad (hoch nach niedrig)",
+        "sortLowHigh": "Schweregrad (niedrig nach hoch)"
+      },
+      "table": {
+        "cveId": "CVE-ID",
+        "severity": "Schweregrad",
+        "title": "Titel",
+        "asset": "Asset",
+        "cvss": "CVSS",
+        "repetitions": "Wiederholungen",
+        "status": "Status"
+      }
+    },
+    "aiPentesting": {
+      "title": "KI-Pentesting-Engine",
+      "description": "Autonome Penetration-Testing-Engine mit künstlicher Intelligenz",
+      "actions": {
+        "pause": "Scan pausieren",
+        "newScan": "+ Neuer Scan"
+      },
+      "stats": {
+        "toolsExecuting": "Ausgeführte Tools",
+        "total": "gesamt",
+        "active": "Aktiv",
+        "activeBranches": "Aktive Zweige",
+        "paths": "Pfade",
+        "completed": "abgeschlossen",
+        "vulnerabilitiesFound": "Gefundene Schwachstellen",
+        "issues": "Probleme",
+        "critical": "kritisch",
+        "scanProgress": "Scan-Fortschritt",
+        "remaining": "verbleibend"
+      },
+      "rationale": {
+        "title": "Engine-Begründung",
+        "currentFocus": "Aktueller Fokus",
+        "decisionProcess": "Entscheidungsprozess",
+        "next": "Nächste",
+        "reasoning": "Begründung"
+      },
+      "tools": {
+        "title": "Tool-Ausführung",
+        "active": "aktiv",
+        "running": "LÄUFT",
+        "starting": "STARTET"
+      },
+      "logs": {
+        "title": "Ausführungsprotokolle"
+      },
+      "nextSteps": {
+        "title": "Nächste Schritte",
+        "priority": "Priorität",
+        "eta": "Geschätzte Zeit"
+      }
+    },
+    "patches": {
+      "title": "Patch-Manager",
+      "description": "Patch-Verwaltung und Infrastrukturbehebung",
+      "tabs": {
+        "network": "Netzwerk und Perimeter",
+        "appSecurity": "Anwendungssicherheit",
+        "serversContainers": "Server und Container"
+      },
+      "buttons": {
+        "autoAssign": "Alle automatisch zuweisen",
+        "reassign": "Neu zuweisen"
+      },
+      "table": {
+        "cve": "CVE",
+        "asset": "ASSET",
+        "currentTarget": "AKTUELL -> ZIEL",
+        "severity": "SCHWEREGRAD",
+        "assigned": "ZUGEWIESEN",
+        "action": "AKTION"
+      }
+    },
+    "teamPage": {
+      "title": "Team & Assets",
+      "description": "Teamverwaltung, Zuweisungen und Infrastruktur-Assets",
+      "subtitle": "Zentralisierte Verwaltung für Ihr Sicherheitsteam",
+      "btnAddMember": "Mitglied hinzufügen",
+      "btnAnalytics": "Analysen",
+      "btnSyncLdap": "LDAP synchronisieren",
+      "loading": "Team wird geladen...",
+      "empty": {
+        "noTeams": "Keine Teams registriert",
+        "noTeamsHint": "Erstellen Sie Ihr erstes Team, um Mitglieder zu verwalten",
+        "noMembers": "Dieses Team hat noch keine Mitglieder"
+      },
+      "stats": {
+        "totalMembers": "Gesamtzahl der Mitglieder",
+        "teams": "Teams",
+        "activeTasks": "Aktive Aufgaben",
+        "avgPerMember": "{{val}} pro Mitglied",
+        "overloaded": "Überlastet",
+        "moreThan5": "Mehr als 5 Aufgaben",
+        "available": "Verfügbar",
+        "lessThan3": "Weniger als 3 Aufgaben",
+        "avgCompletion": "Durchschnittszeit",
+        "perTask": "pro Aufgabe"
+      },
+      "error": {
+        "confirmDelete": "Sind Sie sicher, dass Sie dieses Element löschen möchten?",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte versuchen Sie es erneut."
+      },
+      "modal": {
+        "addTitle": "Neues Mitglied hinzufügen",
+        "fieldName": "Vollständiger Name",
+        "fieldNamePlaceholder": "z.B. Elena Rodríguez",
+        "fieldEmail": "E-Mail-Adresse",
+        "fieldEmailPlaceholder": "elena@dani-eth.com",
+        "fieldRole": "Rolle / Spezialgebiet",
+        "fieldRolePlaceholder": "Rolle auswählen...",
+        "fieldTeamLead": "Als Teamleiter zuweisen",
+        "btnAdd": "Mitglied hinzufügen",
+        "btnAdding": "Speichern...",
+        "errorRequired": "Name, E-Mail und Rolle sind erforderlich.",
+        "errorApi": "Fehler beim Erstellen des Mitglieds.",
+        "roles": {
+          "securityAnalyst": "Sicherheitsanalyst",
+          "pentester": "Pentester",
+          "securityEngineer": "Sicherheitsingenieur",
+          "readOnly": "Nur Lesen"
+        }
+      },
+      "member": {
+        "idLabel": "ID:",
+        "teamLead": "Team Lead",
+        "activeTasks": "{{count}} aktive Aufgabe",
+        "activeTasks_plural": "{{count}} aktive Aufgaben",
+        "completedMonth": "Diesen Monat abgeschlossen",
+        "avgCompletion": "Durchschn. Abschlusszeit",
+        "viewReassign": "Alle Aufgaben anzeigen & neu zuweisen",
+        "workload": {
+          "label": "Aktuelle Auslastung",
+          "light": "Geringe Last",
+          "medium": "Mittlere Last",
+          "overloaded": "Überlastet"
+        },
+        "permissions": {
+          "title": "🔒 Anwendungsberechtigungen",
+          "viewDashboard": "📊 Dashboard anzeigen",
+          "runScans": "🔍 Scans ausführen",
+          "vulnerabilityHub": "⚠ Vulnerability Hub - Vollzugriff",
+          "managePatches": "✏ Patches verwalten",
+          "teamManagement": "👥 Teamverwaltung",
+          "adminSettings": "⚙ Admin-Einstellungen"
+        },
+        "notifications": {
+          "title": "🔔 Benachrichtigungseinstellungen",
+          "email": "✉ E-Mail",
+          "slack": "💬 Slack",
+          "sms": "📱 SMS (Nur Kritisch)",
+          "inApp": "🔔 In-App-Benachrichtigungen",
+          "notifyWhen": "Benachrichtigen bei:",
+          "taskAssigned": "Aufgabe zugewiesen",
+          "criticalVuln": "Kritische Schwachstellen",
+          "dailyDigest": "Tägliche Zusammenfassung"
+        },
+        "actions": {
+          "edit": "✏ Bearbeiten",
+          "delete": "🗑",
+          "moveTeam": "🔄 Team wechseln"
+        }
+      },
+      "createTeam": {
+        "btnCreate": "Team erstellen",
+        "modalTitle": "Neues Team erstellen",
+        "fieldName": "Teamname",
+        "fieldNamePlaceholder": "z.B. Red Team",
+        "fieldIcon": "Symbol (Emoji)",
+        "fieldIconPlaceholder": "z.B. 🔴",
+        "btnConfirm": "Team erstellen",
+        "btnCreating": "Wird erstellt...",
+        "errorRequired": "Teamname ist erforderlich.",
+        "errorApi": "Fehler beim Erstellen des Teams.",
+        "deleteConfirm": "Dieses Team und alle Mitglieder löschen?",
+        "deleteBtn": "Team löschen",
+        "deleteFailed": "Team konnte nicht gelöscht werden."
+      }
+    },
+    "reports": {
+      "title": "Berichte",
+      "description": "Umfassende Sicherheitsberichte erstellen",
+      "vulnerabilityReport": "Schwachstellenbericht",
+      "vulnerabilityDesc": "Detaillierte Liste der Schwachstellen mit KI-Aktionen und Tool-Ergebnissen",
+      "patchesByTech": "Patches nach Technologie",
+      "patchesByTechDesc": "Nach Technologiestack organisiert mit allen ausstehenden Patches",
+      "patchesByServer": "Patches nach Server",
+      "patchesByServerDesc": "Nach Infrastruktur organisiert mit Patches pro Server",
+      "riskHeatmap": "Risiko-Heatmap",
+      "riskHeatmapDesc": "Visuelle Risikokarte nach Asset-Typ und Schweregrad",
+      "personnelAssignments": "Personal und Zuweisungen",
+      "personnelDesc": "Analyse der Team-Auslastung mit Abschlussmetriken",
+      "execSummary": "Executive Summary",
+      "execDesc": "Umfassender Bericht mit allen Sicherheitsmetriken und Trends für die Führungsebene",
+      "generate": "Bericht erstellen",
+      "generateExec": "Executive-Bericht erstellen"
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "description": "Systemeinstellungen und Team-Berechtigungen konfigurieren",
+      "general": {
+        "title": "Allgemeine Einstellungen",
+        "theme": "Design",
+        "dark": "Dunkel",
+        "light": "Hell",
+        "active": "Aktiv",
+        "comingSoon": "Demnächst",
+        "language": "Sprache",
+        "aiWorkers": "KI-Engine-Worker",
+        "aiWorkersHint": "Mehr Worker = schnellere Scans, höhere CPU-Auslastung"
+      },
+      "permissions": {
+        "title": "Berechtigungen der Teammitglieder",
+        "table": {
+          "member": "Mitglied",
+          "portalAccess": "Portalzugang",
+          "runEngine": "Engine ausführen",
+          "receiveAlerts": "Warnungen erhalten",
+          "alertChannel": "Warnkanal"
+        }
+      }
+    }
+  },
+  "setup": {
+    "title": "Einrichtung wird überprüft",
+    "checkingBackend": "Verbindung zum Backend...",
+    "backendOk": "Backend verbunden",
+    "backendError": "Verbindung zum Backend fehlgeschlagen",
+    "firebaseOk": "Firebase konfiguriert",
+    "firebaseError": "Firebase ist nicht konfiguriert",
+    "ready": "Alles bereit. Die Anwendung läuft korrekt.",
+    "nextSteps": "Nächste Schritte",
+    "step2": "Layout und Navigation implementieren",
+    "step3": "Authentifizierungssystem implementieren",
+    "goToDashboard": "Zum Dashboard"
+  }
+}

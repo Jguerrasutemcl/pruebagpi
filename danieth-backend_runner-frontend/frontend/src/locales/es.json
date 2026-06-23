@@ -1,0 +1,269 @@
+{
+  "app": {
+    "name": "DANI-ETH",
+    "tagline": "Plataforma de Ethical Hacking Automatizado"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar",
+    "comingSoon": "Próximamente",
+    "comingSoonDescription": "Esta sección está en desarrollo. La construiremos en los próximos sprints."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "vulnerabilities": "Centro de Vulnerabilidades",
+    "aiPentesting": "Pentesting con IA",
+    "patches": "Gestor de Parches",
+    "team": "Equipo y Activos",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "toggleTheme": "Cambiar tema",
+    "toggleThemeDark": "Cambiar a modo oscuro",
+    "toggleThemeLight": "Cambiar a modo claro",
+    "language": "Idioma"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Panel",
+      "description": "Centro de mando de seguridad — métricas y vulnerabilidades en tiempo real",
+      "riskScore": "Puntuación de riesgo",
+      "criticalIssues": "Problemas críticos",
+      "highPriority": "Alta prioridad",
+      "resolvedThisMonth": "Resueltos este mes",
+      "requiresImmediateAction": "Requiere acción inmediata",
+      "escalateWithinSla": "Escalar dentro del SLA",
+      "remediationCompleted": "Remediación completada",
+      "recentVulnerabilities": "Vulnerabilidades recientes",
+      "viewAll": "Ver todas",
+      "description2": "Descripción",
+      "asset": "Activo",
+      "severity": "Severidad",
+      "status": "Estado",
+      "noData": "Aún no hay datos",
+      "noDataHint": "Los datos aparecerán aquí una vez que el backend esté conectado.",
+      "vulnDetail": "Detalle de vulnerabilidad",
+      "published": "Publicado",
+      "analyzeWithAI": "Analizar con IA",
+      "viewInHub": "Ver en Centro de Vulnerabilidades",
+      "cveId": "CVE ID",
+      "riskHeatmap": "Mapa de calor de riesgo",
+      "patchProgress": "Progreso de parches",
+      "activeScans": "Escaneos activos",
+      "latestFindings": "Últimos {{count}} hallazgos",
+      "orderedBySeverityAndIssueCount": "Ordenado por severidad y cantidad de incidencias",
+      "openManager": "Abrir gestor",
+      "openEngine": "Abrir motor",
+      "completed": "{{done}}/{{total}} completados",
+      "realTimeOverview": "Vista general en tiempo real de tu postura de seguridad",
+      "liveConnected": "WebSocket en vivo conectado",
+      "mockFallback": "Modo fallback simulado",
+      "noWidgetData": "No disponible por el momento.",
+      "retry": "Reintentar",
+      "loadWidgetsError": "No se pudieron cargar los widgets del panel.",
+      "riskScoreError": "No se pudo cargar la puntuación de riesgo.",
+      "quickStats": "Estadísticas rápidas",
+      "quickStatsError": "No se pudieron cargar las estadísticas rápidas.",
+      "heatmapError": "No se pudo cargar el mapa de calor de riesgos.",
+      "recentError": "No se pudieron cargar las vulnerabilidades recientes.",
+      "patchError": "No se pudo cargar el progreso de parches.",
+      "scansError": "No se pudieron cargar los escaneos activos.",
+      "previousScore": "Puntuación anterior",
+      "change": "Cambio",
+      "trend": "Tendencia",
+      "issues": "incidencias",
+      "clickToFilter": "Haz clic para filtrar en el Centro de Vulnerabilidades",
+      "segment": "Segmento",
+      "detected": "Detectado",
+      "titleCol": "Título",
+      "realTimeStatus": "Estado de ejecución en tiempo real",
+      "eta": "ETA",
+      "progress": "Progreso",
+      "running": "En ejecución",
+      "paused": "Pausado",
+      "queued": "En cola",
+      "open": "Abierta",
+      "inProgress": "En progreso",
+      "resolved": "Resuelta",
+      "increasing": "En aumento",
+      "decreasing": "En descenso",
+      "stable": "Estable",
+      "critical": "Crítica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja",
+      "webApplications": "Aplicaciones web",
+      "databases": "Bases de datos",
+      "apis": "APIs",
+      "cloudInfrastructure": "Infraestructura en la nube",
+      "networkDevices": "Dispositivos de red",
+      "containers": "Contenedores",
+      "mobileApps": "Aplicaciones móviles",
+      "cvss": "CVSS",
+      "remediationPlan": "Plan de remediación",
+      "remediationStep1": "1. Validar el endpoint afectado o la exposición del activo.",
+      "remediationStep2": "2. Aplicar el parche o la remediación de código en staging.",
+      "remediationStep3": "3. Volver a probar con un escáner de seguridad y verificación manual.",
+      "remediationStep4": "4. Cerrar el hallazgo después de subir la evidencia de remediación."
+    },
+    "vulnerabilities": {
+      "title": "Centro de Vulnerabilidades",
+      "description": "Gestión centralizada de vulnerabilidades detectadas",
+      "emptyServers": "Vulnerabilidades de servidores simuladas. Haz clic en las otras pestañas para ver datos.",
+      "tabs": {
+        "network": "Red y perímetro",
+        "applications": "Aplicaciones y web",
+        "servers": "Servidores y servicios"
+      },
+      "filters": {
+        "search": "Buscar vulnerabilidades...",
+        "allSeverities": "Todas las severidades",
+        "critical": "Crítica",
+        "high": "Alta",
+        "medium": "Media",
+        "low": "Baja",
+        "sortBy": "Ordenar por...",
+        "sortHighLow": "Severidad (de mayor a menor)",
+        "sortLowHigh": "Severidad (de menor a mayor)"
+      },
+      "table": {
+        "cveId": "CVE ID",
+        "severity": "Severidad",
+        "title": "Título",
+        "asset": "Activo",
+        "cvss": "CVSS",
+        "repetitions": "Repeticiones",
+        "status": "Estado"
+      }
+    },
+    "aiPentesting": {
+      "title": "Motor de Pentesting con IA",
+      "description": "Motor autónomo de pruebas de penetración con inteligencia artificial",
+      "actions": {
+        "pause": "Pausar escaneo",
+        "newScan": "+ Nuevo escaneo"
+      },
+      "stats": {
+        "toolsExecuting": "Herramientas en ejecución",
+        "total": "total",
+        "active": "Activas",
+        "activeBranches": "Ramas activas",
+        "paths": "rutas",
+        "completed": "completadas",
+        "vulnerabilitiesFound": "Vulnerabilidades encontradas",
+        "issues": "incidencias",
+        "critical": "críticas",
+        "scanProgress": "Progreso del escaneo",
+        "remaining": "restante"
+      },
+      "rationale": {
+        "title": "Razonamiento del motor",
+        "currentFocus": "Foco actual",
+        "decisionProcess": "Proceso de decisión",
+        "next": "Siguiente",
+        "reasoning": "Razonamiento"
+      },
+      "tools": {
+        "title": "Ejecución de herramientas",
+        "active": "activas",
+        "running": "EJECUTANDO",
+        "starting": "INICIANDO"
+      },
+      "logs": {
+        "title": "Logs de ejecución"
+      },
+      "nextSteps": {
+        "title": "Próximos pasos",
+        "priority": "Prioridad",
+        "eta": "Tiempo estimado"
+      }
+    },
+    "patches": {
+      "title": "Gestor de Parches",
+      "description": "Gestión de parches y remediación de infraestructura",
+      "tabs": {
+        "network": "Red y perímetro",
+        "appSecurity": "Seguridad de aplicaciones",
+        "serversContainers": "Servidores y contenedores"
+      },
+      "buttons": {
+        "autoAssign": "Asignar todo automáticamente",
+        "reassign": "Reasignar"
+      },
+      "table": {
+        "cve": "CVE",
+        "asset": "ACTIVO",
+        "currentTarget": "ACTUAL -> OBJETIVO",
+        "severity": "SEVERIDAD",
+        "assigned": "ASIGNADO",
+        "action": "ACCIÓN"
+      }
+    },
+    "team": {
+      "title": "Equipo y Activos",
+      "description": "Gestión del equipo, asignaciones y activos de infraestructura"
+    },
+    "reports": {
+      "title": "Reportes",
+      "description": "Genera reportes de seguridad completos",
+      "vulnerabilityReport": "Reporte de vulnerabilidades",
+      "vulnerabilityDesc": "Listado detallado de vulnerabilidades con acciones de IA y resultados de herramientas",
+      "patchesByTech": "Parches por tecnología",
+      "patchesByTechDesc": "Organizado por stack tecnológico mostrando todos los parches pendientes",
+      "patchesByServer": "Parches por servidor",
+      "patchesByServerDesc": "Organizado por infraestructura mostrando parches por servidor",
+      "riskHeatmap": "Mapa de calor de riesgo",
+      "riskHeatmapDesc": "Mapa visual de exposición al riesgo por tipo de activo y severidad",
+      "personnelAssignments": "Personal y asignaciones",
+      "personnelDesc": "Análisis de carga de trabajo del equipo con métricas de finalización",
+      "execSummary": "Resumen ejecutivo",
+      "execDesc": "Reporte integral que consolida métricas y tendencias de seguridad para liderazgo",
+      "generate": "Generar reporte",
+      "generateExec": "Generar reporte ejecutivo"
+    },
+    "settings": {
+      "title": "Configuración",
+      "description": "Configura preferencias del sistema y permisos del equipo",
+      "general": {
+        "title": "Configuración general",
+        "theme": "Tema",
+        "dark": "Oscuro",
+        "light": "Claro",
+        "active": "Activo",
+        "comingSoon": "Próximamente",
+        "language": "Idioma",
+        "aiWorkers": "Workers del motor de IA",
+        "aiWorkersHint": "Más workers = escaneos más rápidos, mayor uso de CPU"
+      },
+      "permissions": {
+        "title": "Permisos de miembros del equipo",
+        "table": {
+          "member": "Miembro",
+          "portalAccess": "Acceso al portal",
+          "runEngine": "Ejecutar motor",
+          "receiveAlerts": "Recibir alertas",
+          "alertChannel": "Canal de alertas"
+        }
+      }
+    }
+  },
+  "setup": {
+    "title": "Verificando configuración",
+    "checkingBackend": "Conectando al backend...",
+    "backendOk": "Backend conectado",
+    "backendError": "No se pudo conectar al backend",
+    "firebaseOk": "Firebase configurado",
+    "firebaseError": "Firebase no está configurado",
+    "ready": "Todo listo. La aplicación está funcionando correctamente.",
+    "nextSteps": "Próximos pasos",
+    "step2": "Implementar layout y navegación",
+    "step3": "Implementar sistema de autenticación",
+    "goToDashboard": "Ir al panel"
+  }
+}

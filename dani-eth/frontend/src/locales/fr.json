@@ -1,0 +1,370 @@
+{
+  "app": {
+    "name": "DANI-ETH",
+    "tagline": "Plateforme de hacking éthique automatisée"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "search": "Rechercher",
+    "comingSoon": "Bientôt disponible",
+    "comingSoonDescription": "Cette section est en cours de développement. Nous la construirons dans les prochains sprints."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "vulnerabilities": "Centre des vulnérabilités",
+    "aiPentesting": "Pentesting IA",
+    "patches": "Gestionnaire de correctifs",
+    "team": "Équipe et actifs",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "toggleTheme": "Changer le thème",
+    "toggleThemeDark": "Passer en mode sombre",
+    "toggleThemeLight": "Passer en mode clair",
+    "language": "Langue"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Tableau de bord",
+      "description": "Centre de commandement sécurité — métriques et vulnérabilités en temps réel",
+      "riskScore": "Score de risque",
+      "criticalIssues": "Problèmes critiques",
+      "highPriority": "Haute priorité",
+      "resolvedThisMonth": "Résolus ce mois",
+      "requiresImmediateAction": "Nécessite une action immédiate",
+      "escalateWithinSla": "Escalader dans le délai SLA",
+      "remediationCompleted": "Remédiation terminée",
+      "recentVulnerabilities": "Vulnérabilités récentes",
+      "viewAll": "Voir tout",
+      "description2": "Description",
+      "asset": "Actif",
+      "severity": "Sévérité",
+      "status": "Statut",
+      "noData": "Aucune donnée pour l'instant",
+      "noDataHint": "Les données apparaîtront ici une fois le backend connecté.",
+      "vulnDetail": "Détail de la vulnérabilité",
+      "published": "Publié le",
+      "analyzeWithAI": "Analyser avec l'IA",
+      "viewInHub": "Voir dans le Centre des vulnérabilités",
+      "cveId": "CVE ID",
+      "riskHeatmap": "Carte de chaleur des risques",
+      "patchProgress": "Progression des correctifs",
+      "activeScans": "Scans actifs",
+      "latestFindings": "Dernières {{count}} détections",
+      "orderedBySeverityAndIssueCount": "Classé par sévérité et nombre d'incidents",
+      "openManager": "Ouvrir le gestionnaire",
+      "openEngine": "Ouvrir le moteur",
+      "completed": "{{done}}/{{total}} terminés",
+      "realTimeOverview": "Vue en temps réel de votre posture de sécurité",
+      "liveConnected": "WebSocket en direct connecté",
+      "mockFallback": "Mode fallback simulé",
+      "noWidgetData": "Indisponible pour le moment.",
+      "retry": "Réessayer",
+      "loadWidgetsError": "Impossible de charger les widgets du tableau de bord.",
+      "riskScoreError": "Impossible de charger le score de risque.",
+      "quickStats": "Statistiques rapides",
+      "quickStatsError": "Impossible de charger les statistiques rapides.",
+      "heatmapError": "Impossible de charger la carte de chaleur des risques.",
+      "recentError": "Impossible de charger les vulnérabilités récentes.",
+      "patchError": "Impossible de charger la progression des correctifs.",
+      "scansError": "Impossible de charger les scans actifs.",
+      "previousScore": "Score précédent",
+      "change": "Variation",
+      "trend": "Tendance",
+      "issues": "incidents",
+      "clickToFilter": "Cliquez pour filtrer dans le Centre des vulnérabilités",
+      "segment": "Segment",
+      "detected": "Détecté",
+      "titleCol": "Titre",
+      "realTimeStatus": "Statut d'exécution en temps réel",
+      "eta": "Temps estimé",
+      "progress": "Progression",
+      "running": "En cours",
+      "paused": "En pause",
+      "queued": "En file d'attente",
+      "open": "Ouverte",
+      "inProgress": "En cours",
+      "resolved": "Résolue",
+      "increasing": "En hausse",
+      "decreasing": "En baisse",
+      "stable": "Stable",
+      "critical": "Critique",
+      "high": "Élevée",
+      "medium": "Moyenne",
+      "low": "Faible",
+      "webApplications": "Applications web",
+      "databases": "Bases de données",
+      "apis": "APIs",
+      "cloudInfrastructure": "Infrastructure cloud",
+      "networkDevices": "Équipements réseau",
+      "containers": "Conteneurs",
+      "mobileApps": "Applications mobiles",
+      "cvss": "CVSS",
+      "remediationPlan": "Plan de remédiation",
+      "remediationStep1": "1. Valider le point d'accès affecté ou l'exposition de l'actif.",
+      "remediationStep2": "2. Appliquer le correctif ou la remédiation du code en environnement de staging.",
+      "remediationStep3": "3. Re-tester avec un scanner de sécurité et une vérification manuelle.",
+      "remediationStep4": "4. Clore la vulnérabilité après téléversement de la preuve de remédiation."
+    },
+    "vulnerabilities": {
+      "title": "Centre des vulnérabilités",
+      "description": "Gestion centralisée des vulnérabilités détectées",
+      "emptyServers": "Vulnérabilités serveur simulées. Cliquez sur les autres onglets pour afficher les données.",
+      "tabs": {
+        "network": "Réseau et périmètre",
+        "applications": "Applications et web",
+        "servers": "Serveurs et services"
+      },
+      "filters": {
+        "search": "Rechercher des vulnérabilités...",
+        "allSeverities": "Toutes les sévérités",
+        "critical": "Critique",
+        "high": "Élevée",
+        "medium": "Moyenne",
+        "low": "Faible",
+        "sortBy": "Trier par...",
+        "sortHighLow": "Sévérité (de la plus élevée à la plus faible)",
+        "sortLowHigh": "Sévérité (de la plus faible à la plus élevée)"
+      },
+      "table": {
+        "cveId": "CVE ID",
+        "severity": "Sévérité",
+        "title": "Titre",
+        "asset": "Actif",
+        "cvss": "CVSS",
+        "repetitions": "Répétitions",
+        "status": "Statut"
+      }
+    },
+    "aiPentesting": {
+      "title": "Moteur de pentesting IA",
+      "description": "Moteur autonome de tests d'intrusion avec intelligence artificielle",
+      "actions": {
+        "pause": "Mettre le scan en pause",
+        "newScan": "+ Nouveau scan"
+      },
+      "stats": {
+        "toolsExecuting": "Outils en cours d'exécution",
+        "total": "total",
+        "active": "Actifs",
+        "activeBranches": "Branches actives",
+        "paths": "chemins",
+        "completed": "terminés",
+        "vulnerabilitiesFound": "Vulnérabilités trouvées",
+        "issues": "incidents",
+        "critical": "critiques",
+        "scanProgress": "Progression du scan",
+        "remaining": "restant"
+      },
+      "rationale": {
+        "title": "Logique du moteur",
+        "currentFocus": "Focus actuel",
+        "decisionProcess": "Processus de décision",
+        "next": "Suivant",
+        "reasoning": "Raisonnement"
+      },
+      "tools": {
+        "title": "Exécution des outils",
+        "active": "actifs",
+        "running": "EN COURS",
+        "starting": "DÉMARRAGE"
+      },
+      "logs": {
+        "title": "Journaux d'exécution"
+      },
+      "nextSteps": {
+        "title": "Étapes suivantes",
+        "priority": "Priorité",
+        "eta": "Temps estimé"
+      }
+    },
+    "patches": {
+      "title": "Gestionnaire de correctifs",
+      "description": "Gestion des correctifs et remédiation de l'infrastructure",
+      "tabs": {
+        "network": "Réseau et périmètre",
+        "appSecurity": "Sécurité applicative",
+        "serversContainers": "Serveurs et conteneurs"
+      },
+      "buttons": {
+        "autoAssign": "Tout assigner automatiquement",
+        "reassign": "Réassigner"
+      },
+      "table": {
+        "cve": "CVE",
+        "asset": "ACTIF",
+        "currentTarget": "ACTUEL -> CIBLE",
+        "severity": "SÉVÉRITÉ",
+        "assigned": "ASSIGNÉ",
+        "action": "ACTION"
+      }
+    },
+    "teamPage": {
+      "title": "Équipe et Actifs",
+      "description": "Gestion de l'équipe, des affectations et des actifs d'infrastructure",
+      "subtitle": "Gestion centralisée de votre équipe de sécurité",
+      "btnAddMember": "Ajouter un membre",
+      "btnAnalytics": "Analytique",
+      "btnSyncLdap": "Synchroniser LDAP",
+      "loading": "Chargement de l'équipe...",
+      "empty": {
+        "noTeams": "Aucune équipe enregistrée",
+        "noTeamsHint": "Créez votre première équipe pour commencer à gérer les membres",
+        "noMembers": "Cette équipe n'a pas encore de membres"
+      },
+      "stats": {
+        "totalMembers": "Membres totaux",
+        "teams": "équipes",
+        "activeTasks": "Tâches actives",
+        "avgPerMember": "{{val}} par membre",
+        "overloaded": "En surcharge",
+        "moreThan5": "Plus de 5 tâches",
+        "available": "Disponibles",
+        "lessThan3": "Moins de 3 tâches",
+        "avgCompletion": "Temps moyen",
+        "perTask": "par tâche"
+      },
+      "error": {
+        "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+        "deleteFailed": "Échec de la suppression. Veuillez réessayer."
+      },
+      "modal": {
+        "addTitle": "Ajouter un nouveau membre",
+        "fieldName": "Nom Complet",
+        "fieldNamePlaceholder": "ex. Elena Rodríguez",
+        "fieldEmail": "Adresse E-mail",
+        "fieldEmailPlaceholder": "elena@dani-eth.com",
+        "fieldRole": "Rôle / Spécialité",
+        "fieldRolePlaceholder": "Sélectionner un rôle...",
+        "fieldTeamLead": "Assigner comme Chef d'Équipe",
+        "btnAdd": "Ajouter un membre",
+        "btnAdding": "Enregistrement...",
+        "errorRequired": "Nom, e-mail et rôle sont obligatoires.",
+        "errorApi": "Erreur lors de la création du membre.",
+        "roles": {
+          "securityAnalyst": "Analyste en sécurité",
+          "pentester": "Pentester",
+          "securityEngineer": "Ingénieur en sécurité",
+          "readOnly": "Lecture seule"
+        }
+      },
+      "member": {
+        "idLabel": "ID :",
+        "teamLead": "Chef d'équipe",
+        "activeTasks": "{{count}} tâche active",
+        "activeTasks_plural": "{{count}} tâches actives",
+        "completedMonth": "Terminées ce mois",
+        "avgCompletion": "Temps moyen de completion",
+        "viewReassign": "Voir toutes les tâches & réassigner",
+        "workload": {
+          "label": "Charge actuelle",
+          "light": "Charge légère",
+          "medium": "Charge moyenne",
+          "overloaded": "Surchargé"
+        },
+        "permissions": {
+          "title": "🔒 Permissions de l'application",
+          "viewDashboard": "📊 Voir le tableau de bord",
+          "runScans": "🔍 Lancer des scans",
+          "vulnerabilityHub": "⚠ Vulnerability Hub - Accès complet",
+          "managePatches": "✏ Gérer les correctifs",
+          "teamManagement": "👥 Gestion d'équipe",
+          "adminSettings": "⚙ Paramètres admin"
+        },
+        "notifications": {
+          "title": "🔔 Paramètres de notification",
+          "email": "✉ E-mail",
+          "slack": "💬 Slack",
+          "sms": "📱 SMS (Critiques uniquement)",
+          "inApp": "🔔 Notifications in-app",
+          "notifyWhen": "Notifier quand :",
+          "taskAssigned": "Tâche assignée",
+          "criticalVuln": "Vulnérabilités critiques",
+          "dailyDigest": "Résumé quotidien"
+        },
+        "actions": {
+          "edit": "✏ Modifier",
+          "delete": "🗑",
+          "moveTeam": "🔄 Changer d'équipe"
+        }
+      },
+      "createTeam": {
+        "btnCreate": "Créer une équipe",
+        "modalTitle": "Créer une nouvelle équipe",
+        "fieldName": "Nom de l'équipe",
+        "fieldNamePlaceholder": "ex. Red Team",
+        "fieldIcon": "Icône (emoji)",
+        "fieldIconPlaceholder": "ex. 🔴",
+        "btnConfirm": "Créer l'équipe",
+        "btnCreating": "Création...",
+        "errorRequired": "Le nom de l'équipe est obligatoire.",
+        "errorApi": "Erreur lors de la création de l'équipe.",
+        "deleteConfirm": "Supprimer cette équipe et tous ses membres ?",
+        "deleteBtn": "Supprimer l'équipe",
+        "deleteFailed": "Impossible de supprimer l'équipe."
+      }
+    },
+    "reports": {
+      "title": "Rapports",
+      "description": "Générer des rapports de sécurité complets",
+      "vulnerabilityReport": "Rapport de vulnérabilités",
+      "vulnerabilityDesc": "Liste détaillée des vulnérabilités avec actions IA et résultats des outils",
+      "patchesByTech": "Correctifs par technologie",
+      "patchesByTechDesc": "Organisé par stack technologique avec tous les correctifs en attente",
+      "patchesByServer": "Correctifs par serveur",
+      "patchesByServerDesc": "Organisé par infrastructure avec les correctifs par serveur",
+      "riskHeatmap": "Carte de chaleur des risques",
+      "riskHeatmapDesc": "Carte visuelle de l'exposition au risque par type d'actif et sévérité",
+      "personnelAssignments": "Personnel et affectations",
+      "personnelDesc": "Analyse de la charge de travail de l'équipe avec métriques d'achèvement",
+      "execSummary": "Résumé exécutif",
+      "execDesc": "Rapport complet consolidant toutes les métriques et tendances de sécurité pour la direction",
+      "generate": "Générer le rapport",
+      "generateExec": "Générer le rapport exécutif"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "description": "Configurer les préférences système et les permissions de l'équipe",
+      "general": {
+        "title": "Paramètres généraux",
+        "theme": "Thème",
+        "dark": "Sombre",
+        "light": "Clair",
+        "active": "Actif",
+        "comingSoon": "Bientôt disponible",
+        "language": "Langue",
+        "aiWorkers": "Workers du moteur IA",
+        "aiWorkersHint": "Plus de workers = scans plus rapides, utilisation CPU plus élevée"
+      },
+      "permissions": {
+        "title": "Permissions des membres de l'équipe",
+        "table": {
+          "member": "Membre",
+          "portalAccess": "Accès au portail",
+          "runEngine": "Exécuter le moteur",
+          "receiveAlerts": "Recevoir des alertes",
+          "alertChannel": "Canal d'alerte"
+        }
+      }
+    }
+  },
+  "setup": {
+    "title": "Vérification de la configuration",
+    "checkingBackend": "Connexion au backend...",
+    "backendOk": "Backend connecté",
+    "backendError": "Impossible de se connecter au backend",
+    "firebaseOk": "Firebase configuré",
+    "firebaseError": "Firebase n'est pas configuré",
+    "ready": "Tout est prêt. L'application fonctionne correctement.",
+    "nextSteps": "Prochaines étapes",
+    "step2": "Implémenter la mise en page et la navigation",
+    "step3": "Implémenter le système d'authentification",
+    "goToDashboard": "Aller au tableau de bord"
+  }
+}

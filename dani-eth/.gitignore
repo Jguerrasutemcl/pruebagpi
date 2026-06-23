@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+*/node_modules/
+venv/
+*/venv/
+__pycache__/
+*/__pycache__/
+*.pyc
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+
+# Environment files (NUNCA subir credenciales)
+.env
+.env.local
+.env.*.local
+*/.env
+*/.env.local
+
+# Firebase Admin credentials (CRÍTICO: nunca subir)
+**/firebase-admin-key.json
+**/credentials/*.json
+!**/credentials/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+htmlcov/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+*.pid

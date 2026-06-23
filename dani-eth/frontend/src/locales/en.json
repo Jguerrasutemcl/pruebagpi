@@ -1,0 +1,370 @@
+{
+  "app": {
+    "name": "DANI-ETH",
+    "tagline": "Automated Ethical Hacking Platform"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "comingSoon": "Coming soon",
+    "comingSoonDescription": "This section is under development. We'll build it in the upcoming sprints."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "vulnerabilities": "Vulnerability Hub",
+    "aiPentesting": "AI Pentesting",
+    "patches": "Patch Manager",
+    "team": "Team & Assets",
+    "reports": "Reports",
+    "settings": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle theme",
+    "toggleThemeDark": "Switch to dark mode",
+    "toggleThemeLight": "Switch to light mode",
+    "language": "Language"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Security command center — metrics and vulnerabilities in real time",
+      "riskScore": "Risk Score",
+      "criticalIssues": "Critical Issues",
+      "highPriority": "High Priority",
+      "resolvedThisMonth": "Resolved This Month",
+      "requiresImmediateAction": "Requires immediate action",
+      "escalateWithinSla": "Escalate within SLA",
+      "remediationCompleted": "Remediation completed",
+      "recentVulnerabilities": "Recent Vulnerabilities",
+      "viewAll": "View All",
+      "description2": "Description",
+      "asset": "Asset",
+      "severity": "Severity",
+      "status": "Status",
+      "noData": "No data yet",
+      "noDataHint": "Data will appear here once the backend is connected.",
+      "vulnDetail": "Vulnerability Detail",
+      "published": "Published",
+      "analyzeWithAI": "Analyze with AI",
+      "viewInHub": "View in Vulnerability Hub",
+      "cveId": "CVE ID",
+      "riskHeatmap": "Risk Heatmap",
+      "patchProgress": "Patch Progress",
+      "activeScans": "Active Scans",
+      "latestFindings": "Latest {{count}} findings",
+      "orderedBySeverityAndIssueCount": "Ordered by severity and issue count",
+      "openManager": "Open Manager",
+      "openEngine": "Open Engine",
+      "completed": "{{done}}/{{total}} completed",
+      "realTimeOverview": "Real-time overview of your security posture",
+      "liveConnected": "Live WebSocket Connected",
+      "mockFallback": "Mock Fallback Mode",
+      "noWidgetData": "Not available at the moment.",
+      "retry": "Retry",
+      "loadWidgetsError": "Could not load dashboard widgets.",
+      "riskScoreError": "Could not load risk score.",
+      "quickStats": "Quick Stats",
+      "quickStatsError": "Could not load quick stats.",
+      "heatmapError": "Could not load risk heatmap.",
+      "recentError": "Could not load recent vulnerabilities.",
+      "patchError": "Could not load patch progress.",
+      "scansError": "Could not load active scans.",
+      "previousScore": "Previous score",
+      "change": "Change",
+      "trend": "Trend",
+      "issues": "issues",
+      "clickToFilter": "Click to filter in Vulnerability Hub",
+      "segment": "Segment",
+      "detected": "Detected",
+      "titleCol": "Title",
+      "realTimeStatus": "Real-time execution status",
+      "eta": "ETA",
+      "progress": "Progress",
+      "running": "Running",
+      "paused": "Paused",
+      "queued": "Queued",
+      "open": "Open",
+      "inProgress": "In Progress",
+      "resolved": "Resolved",
+      "increasing": "Increasing",
+      "decreasing": "Decreasing",
+      "stable": "Stable",
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "webApplications": "Web Applications",
+      "databases": "Databases",
+      "apis": "APIs",
+      "cloudInfrastructure": "Cloud Infrastructure",
+      "networkDevices": "Network Devices",
+      "containers": "Containers",
+      "mobileApps": "Mobile Apps",
+      "cvss": "CVSS",
+      "remediationPlan": "Remediation Plan",
+      "remediationStep1": "1. Validate affected endpoint or asset exposure.",
+      "remediationStep2": "2. Apply patch or code remediation in staging.",
+      "remediationStep3": "3. Retest with security scanner and manual verification.",
+      "remediationStep4": "4. Close the finding after remediation evidence is uploaded."
+    },
+    "vulnerabilities": {
+      "title": "Vulnerability Hub",
+      "description": "Centralized management of detected vulnerabilities",
+      "emptyServers": "Simulated server vulnerabilities. Click other tabs to view data.",
+      "tabs": {
+        "network": "Network & Perimeter",
+        "applications": "Applications & Web",
+        "servers": "Servers & Services"
+      },
+      "filters": {
+        "search": "Search vulnerabilities...",
+        "allSeverities": "All Severities",
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "sortBy": "Sort by...",
+        "sortHighLow": "Severity (High to Low)",
+        "sortLowHigh": "Severity (Low to High)"
+      },
+      "table": {
+        "cveId": "CVE ID",
+        "severity": "Severity",
+        "title": "Title",
+        "asset": "Asset",
+        "cvss": "CVSS",
+        "repetitions": "Repetitions",
+        "status": "Status"
+      }
+    },
+    "aiPentesting": {
+      "title": "AI Pentesting Engine",
+      "description": "Autonomous penetration testing engine with artificial intelligence",
+      "actions": {
+        "pause": "Pause Scan",
+        "newScan": "+ New Scan"
+      },
+      "stats": {
+        "toolsExecuting": "Tools Executing",
+        "total": "total",
+        "active": "Active",
+        "activeBranches": "Active Branches",
+        "paths": "paths",
+        "completed": "completed",
+        "vulnerabilitiesFound": "Vulnerabilities Found",
+        "issues": "issues",
+        "critical": "critical",
+        "scanProgress": "Scan Progress",
+        "remaining": "remaining"
+      },
+      "rationale": {
+        "title": "Engine Rationale",
+        "currentFocus": "Current Focus",
+        "decisionProcess": "Decision Process",
+        "next": "Next",
+        "reasoning": "Reasoning"
+      },
+      "tools": {
+        "title": "Tools Execution",
+        "active": "active",
+        "running": "RUNNING",
+        "starting": "STARTING"
+      },
+      "logs": {
+        "title": "Execution Logs"
+      },
+      "nextSteps": {
+        "title": "Next Steps",
+        "priority": "Priority",
+        "eta": "Est. time"
+      }
+    },
+    "patches": {
+      "title": "Patch Manager",
+      "description": "Patch management and infrastructure remediation",
+      "tabs": {
+        "network": "Network & Perimeter",
+        "appSecurity": "Application Security",
+        "serversContainers": "Servers & Containers"
+      },
+      "buttons": {
+        "autoAssign": "Auto-Assign All",
+        "reassign": "Reassign"
+      },
+      "table": {
+        "cve": "CVE",
+        "asset": "ASSET",
+        "currentTarget": "CURRENT -> TARGET",
+        "severity": "SEVERITY",
+        "assigned": "ASSIGNED",
+        "action": "ACTION"
+      }
+    },
+   "teamPage": {
+  "title": "Team & Assets",
+  "description": "Team management, assignments, and infrastructure assets",
+  "subtitle": "Centralized management for your security team",
+  "btnAddMember": "Add member",
+  "btnAnalytics": "Analytics",
+  "btnSyncLdap": "Sync LDAP",
+  "loading": "Loading team...",
+  "empty": {
+    "noTeams": "No teams registered",
+    "noTeamsHint": "Create your first team to start managing members",
+    "noMembers": "This team has no members yet"
+  },
+  "stats": {
+    "totalMembers": "Total members",
+    "teams": "teams",
+    "activeTasks": "Active tasks",
+    "avgPerMember": "{{val}} per member",
+    "overloaded": "Overloaded",
+    "moreThan5": "More than 5 tasks",
+    "available": "Available",
+    "lessThan3": "Less than 3 tasks",
+    "avgCompletion": "Average time",
+    "perTask": "per task"
+  },
+  "error": {
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "deleteFailed": "Could not delete. Please try again."
+  },
+  "modal": {
+    "addTitle": "Add New Member",
+    "fieldName": "Full Name",
+    "fieldNamePlaceholder": "e.g. Elena Rodríguez",
+    "fieldEmail": "Email Address",
+    "fieldEmailPlaceholder": "elena@dani-eth.com",
+    "fieldRole": "Role / Specialty",
+    "fieldRolePlaceholder": "Select a role...",
+    "fieldTeamLead": "Assign as Team Lead",
+    "btnAdd": "Add Member",
+    "btnAdding": "Saving...",
+    "errorRequired": "Name, email and role are required.",
+    "errorApi": "Error creating the member.",
+    "roles": {
+      "securityAnalyst": "Security Analyst",
+      "pentester": "Pentester",
+      "securityEngineer": "Security Engineer",
+      "readOnly": "Read Only"
+    }
+  },
+  "member": {
+    "idLabel": "ID:",
+    "teamLead": "Team Lead",
+    "activeTasks": "{{count}} active task",
+    "activeTasks_plural": "{{count}} active tasks",
+    "completedMonth": "Completed This Month",
+    "avgCompletion": "Avg Completion Time",
+    "viewReassign": "View All Tasks & Reassign",
+    "workload": {
+      "label": "Current Workload",
+      "light": "Light Load",
+      "medium": "Medium Load",
+      "overloaded": "Overloaded"
+    },
+    "permissions": {
+      "title": "🔒 Application Permissions",
+      "viewDashboard": "📊 View Dashboard",
+      "runScans": "🔍 Run Scans",
+      "vulnerabilityHub": "⚠ Vulnerability Hub - Full Access",
+      "managePatches": "✏ Manage Patches",
+      "teamManagement": "👥 Team Management",
+      "adminSettings": "⚙ Admin Settings"
+    },
+    "notifications": {
+      "title": "🔔 Notification Settings",
+      "email": "✉ Email",
+      "slack": "💬 Slack",
+      "sms": "📱 SMS (Critical only)",
+      "inApp": "🔔 In-App Notifications",
+      "notifyWhen": "Notify When:",
+      "taskAssigned": "Task assigned",
+      "criticalVuln": "Critical vulnerabilities",
+      "dailyDigest": "Daily digest"
+    },
+    "actions": {
+      "edit": "✏ Edit",
+      "delete": "🗑",
+      "moveTeam": "🔄 Move Team"
+    }
+  },
+  "createTeam": {
+    "btnCreate": "Create Team",
+    "modalTitle": "Create New Team",
+    "fieldName": "Team Name",
+    "fieldNamePlaceholder": "e.g. Red Team",
+    "fieldIcon": "Icon (emoji)",
+    "fieldIconPlaceholder": "e.g. 🔴",
+    "btnConfirm": "Create Team",
+    "btnCreating": "Creating...",
+    "errorRequired": "Team name is required.",
+    "errorApi": "Error creating the team.",
+    "deleteConfirm": "Delete this team and all its members?",
+    "deleteBtn": "Delete Team",
+    "deleteFailed": "Could not delete the team."
+  }
+},
+    "reports": {
+      "title": "Reports",
+      "description": "Generate comprehensive security reports",
+      "vulnerabilityReport": "Vulnerability Report",
+      "vulnerabilityDesc": "Detailed listing of vulnerabilities with AI actions and tool results",
+      "patchesByTech": "Patches by Technology",
+      "patchesByTechDesc": "Organized by technology stack showing all pending patches",
+      "patchesByServer": "Patches by Server",
+      "patchesByServerDesc": "Organized by infrastructure showing patches per server",
+      "riskHeatmap": "Risk Heatmap",
+      "riskHeatmapDesc": "Visual risk exposure map by asset type and severity",
+      "personnelAssignments": "Personnel & Assignments",
+      "personnelDesc": "Team workload analysis with completion metrics",
+      "execSummary": "Executive Summary",
+      "execDesc": "Comprehensive report consolidating all security metrics and trends for leadership",
+      "generate": "Generate Report",
+      "generateExec": "Generate Executive Report"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Configure system preferences and team permissions",
+      "general": {
+        "title": "General Settings",
+        "theme": "Theme",
+        "dark": "Dark",
+        "light": "Light",
+        "active": "Active",
+        "comingSoon": "Coming Soon",
+        "language": "Language",
+        "aiWorkers": "AI Engine Workers",
+        "aiWorkersHint": "More workers = faster scans, higher CPU usage"
+      },
+      "permissions": {
+        "title": "Team Member Permissions",
+        "table": {
+          "member": "Member",
+          "portalAccess": "Portal Access",
+          "runEngine": "Run Engine",
+          "receiveAlerts": "Receive Alerts",
+          "alertChannel": "Alert Channel"
+        }
+      }
+    }
+  },
+  "setup": {
+    "title": "Verifying setup",
+    "checkingBackend": "Connecting to backend...",
+    "backendOk": "Backend connected",
+    "backendError": "Could not connect to backend",
+    "firebaseOk": "Firebase configured",
+    "firebaseError": "Firebase is not configured",
+    "ready": "All set. The application is running correctly.",
+    "nextSteps": "Next steps",
+    "step2": "Implement layout and navigation",
+    "step3": "Implement authentication system",
+    "goToDashboard": "Go to Dashboard"
+  }
+}

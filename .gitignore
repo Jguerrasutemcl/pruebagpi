@@ -1,0 +1,28 @@
+﻿# Secretos / entornos
+.env
+.env.*
+!.env.example
+
+# Python (backend, runner, orquestador)
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node (frontend)
+node_modules/
+dist/
+build/
+
+# Credenciales
+credentials/
+*.pem
+*.key
+
+# El venv de la raiz
+/venv/
+
+# Editor / sistema
+.DS_Store
+.vscode/
+.idea/

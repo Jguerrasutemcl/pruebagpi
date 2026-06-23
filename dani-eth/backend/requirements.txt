@@ -1,0 +1,32 @@
+# FastAPI y servidor
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+
+# Validación y configuración
+pydantic==2.9.2
+pydantic-settings==2.6.0
+python-dotenv==1.0.1
+
+# Firebase Admin SDK
+firebase-admin==6.5.0
+
+# Google Gemini (para el orquestador, lo usará el compañero)
+google-generativeai==0.8.3
+
+# CORS y middleware
+python-multipart==0.0.12
+
+# Redis (para colas de tareas futuras)
+redis==5.1.1
+
+# Testing
+pytest==8.3.3
+httpx==0.25.2
+pytest-asyncio==0.24.0
+
+# Utilidades
+python-dateutil==2.9.0
+email-validator==2.1.0.post1
+
+# Storage Alternativo (Sin tarjeta de crédito)
+supabase==2.4.0
