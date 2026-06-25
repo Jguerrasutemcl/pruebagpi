@@ -30,6 +30,7 @@ export interface CampaignStart {
   target: string;
   scan_type: 'full' | 'quick' | 'custom';
   scope: string[];
+  modo?: 'exploration' | 'full';
 }
 
 export interface RemediationItem {

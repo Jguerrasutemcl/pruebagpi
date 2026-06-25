@@ -8,6 +8,7 @@ class ReportSummary(BaseModel):
     type: str
     generated_at: str
     pdf_url: str | None = None       # URL pública de Supabase, null si no hay PDF
+    markdown_url: str | None = None  # URL pública del .md en Supabase Storage
 
 
 class FindingDetail(BaseModel):
@@ -33,10 +34,12 @@ class ReportDetail(BaseModel):
     campaign_id: str
     target: str
     type: str
-    summary: ReportSummaryStats | None = None
+    # summary puede ser {"markdown": "..."} (orquestador) o stats de hallazgos
+    summary: dict | None = None
     findings: list[FindingDetail] = []
     generated_at: str
-    pdf_url: str | None = None       # URL pública de Supabase, null si no hay PDF
+    pdf_url: str | None = None       # URL pública del PDF en Supabase Storage
+    markdown_url: str | None = None  # URL pública del .md en Supabase Storage
 
 
 class ReportIngest(BaseModel):

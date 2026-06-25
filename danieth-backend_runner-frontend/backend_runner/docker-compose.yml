@@ -15,7 +15,7 @@ services:
       dockerfile: api_gateway/Dockerfile
     container_name: runner-api-gateway
     ports:
-      - "8002:8000"
+      - "8010:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:

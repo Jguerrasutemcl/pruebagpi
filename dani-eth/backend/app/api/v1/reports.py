@@ -96,6 +96,23 @@ async def ingest_report(
                 logger.error(f"Error subiendo PDF a Supabase: {e}")
                 # El reporte se guarda igual, solo sin PDF
 
+    # Subir contenido Markdown a Supabase Storage si está disponible
+    markdown_url: str | None = None
+    md_content = body.summary.get("markdown") if isinstance(body.summary, dict) else None
+    if md_content and supabase_ready:
+        try:
+            md_bytes = md_content.encode("utf-8")
+            md_file  = f"{report_id}.md"
+            supabase_client.storage.from_("reportes").upload(
+                path=md_file,
+                file=md_bytes,
+                file_options={"content-type": "text/markdown; charset=utf-8"},
+            )
+            markdown_url = supabase_client.storage.from_("reportes").get_public_url(md_file)
+            logger.info(f"Markdown subido a Supabase: reportes/{md_file}")
+        except Exception as e:
+            logger.error(f"Error subiendo Markdown a Supabase: {e}")
+
     doc_ref.set({
         "report_id": report_id,
         "campaign_id": body.campaign_id,
@@ -105,12 +122,14 @@ async def ingest_report(
         "findings": body.findings,
         "generated_at": body.generated_at,
         "pdf_url": pdf_url,
+        "markdown_url": markdown_url,
     })
 
     return {
         "report_id": report_id,
         "message": "Reporte guardado correctamente",
         "pdf_stored": pdf_url is not None,
+        "markdown_stored": markdown_url is not None,
     }
 
 
@@ -138,6 +157,7 @@ async def list_reports(
             type=d.to_dict().get("type", "technical"),
             generated_at=d.to_dict().get("generated_at", ""),
             pdf_url=d.to_dict().get("pdf_url"),
+            markdown_url=d.to_dict().get("markdown_url"),
         )
         for d in page
     ]
@@ -160,6 +180,7 @@ async def get_report(report_id: str, _: ReadReports) -> ReportDetail:
         findings=data.get("findings", []),
         generated_at=data.get("generated_at", ""),
         pdf_url=data.get("pdf_url"),
+        markdown_url=data.get("markdown_url"),
     )
 
 from fastapi import UploadFile, File

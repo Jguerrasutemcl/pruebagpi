@@ -97,8 +97,16 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
               <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
               <div className="absolute right-0 mt-2 w-48 bg-bg-secondary border border-border-primary rounded-lg shadow-2xl z-20 py-2">
                 <div className="px-4 py-3 border-b border-border-primary">
-                  <div className="inline-flex items-center px-2 py-1 rounded text-[11px] font-bold uppercase bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20">
-                    {role}
+                  <div>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                      {profile?.name || user?.displayName || 'Usuario'}
+                    </p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {profile?.email || user?.email || ''}
+                    </p>
+                    <div className="inline-flex items-center mt-2 px-2 py-1 rounded text-[11px] font-bold uppercase bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20">
+                      {role}
+                    </div>
                   </div>
                 </div>
                 <div className="p-1">

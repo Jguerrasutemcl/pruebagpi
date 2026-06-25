@@ -36,6 +36,11 @@ CORS_ORIGINS = [
 RUNNER_POLL_INTERVALO = 2      # segundos entre consultas
 RUNNER_POLL_MAX = 150          # ~5 min de espera máxima por tarea
 
+# Backend principal: URL base y token de servicio para que el Orquestador
+# pueda enviarle reportes al finalizar una campaña.
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+ORCHESTRATOR_SERVICE_TOKEN = os.getenv("ORCHESTRATOR_SERVICE_TOKEN", "")
+
 
 # Objetivo de la misión, editable sin tocar código (orchestrator/objetivo.txt).
 OBJETIVO_PATH = os.path.join(os.path.dirname(__file__), "objetivo.txt")

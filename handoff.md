@@ -1,6 +1,6 @@
 # Handoff — Refactorización de conectividad DANI-ETH
 
-**Fecha:** 2026-06-22  
+**Fecha inicial:** 2026-06-22 · **Última actualización:** 2026-06-24  
 **Autor:** Claude Sonnet 4.6 (Arquitecto de Software)
 
 ---
@@ -202,7 +202,141 @@ start "Runner (Docker)" cmd /k "cd danieth-backend_runner-frontend\backend_runne
 
 ---
 
-## Tabla de contratos alineados (Backend ↔ Orquestador)
+### Fix 8 — Reportes: desconexión entre Orquestador y Backend (flujo roto)
+
+**Archivos modificados:**
+- `Orquestador_AI_ETH/orchestrator/config.py`
+- `Orquestador_AI_ETH/orchestrator/agents/commander.py`
+- `Orquestador_AI_ETH/orchestrator/core/campaign_manager.py`
+- `Orquestador_AI_ETH/orchestrator/routes/campaign.py`
+- `dani-eth/backend/app/schemas/campaign.py`
+
+**Problema:** El Orquestador generaba el reporte Markdown en disco local al finalizar `dirigir_campaña()`, pero nunca lo enviaba al Backend. El Frontend le pedía los reportes al Backend (`GET /api/v1/reports`), que los busca en Firestore — siempre vacío porque el Orquestador nunca escribió allí. El circuito estaba completamente roto.
+
+**Corrección:**
+
+1. **`config.py`** — Nuevas variables de entorno:
+   ```python
+   BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+   ORCHESTRATOR_SERVICE_TOKEN = os.getenv("ORCHESTRATOR_SERVICE_TOKEN", "")
+   ```
+
+2. **`commander.py`** — Nueva función `_enviar_reporte_al_backend()` llamada justo después de `reportador.generar_reporte()`. Lee el `.md` generado y hace `POST /api/v1/reports` con `X-Service-Token` en la cabecera:
+   ```python
+   requests.post(
+       f"{BACKEND_URL}/api/v1/reports",
+       json={"campaign_id": ..., "target": ..., "summary": {"markdown": contenido}, ...},
+       headers={"X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN},
+   )
+   ```
+
+3. **`campaign_manager.py`** — `iniciar()` ahora acepta `campaign_id` (propagado desde el Backend) y `modo`. Ambos se pasan hasta `dirigir_campaña()` para que el reporte se registre con el ID correcto en Firestore.
+
+4. **`routes/campaign.py`** — `IniciarCampaña` acepta `campaign_id: str | None` y `modo: str | None` como campos opcionales.
+
+5. **`schemas/campaign.py` (backend)** — `CampaignStart` añade `modo: str | None = None` para que el campo no se descarte al hacer `body.model_dump()` antes de reenviar al Orquestador.
+
+**Configuración requerida en el `.env` del Orquestador:**
+```env
+BACKEND_URL=http://127.0.0.1:8000
+ORCHESTRATOR_SERVICE_TOKEN=<mismo valor que en el .env del Backend>
+```
+
+---
+
+### Fix 9 — Header.tsx: perfil de usuario incompleto (solo mostraba el rol)
+
+**Archivo:** `dani-eth/frontend/src/components/layout/Header.tsx`
+
+**Problema:** El menú desplegable del avatar solo renderizaba el badge de rol; no había nombre ni email. El div `px-4 py-3` contenía un único `<div>` con el badge, sin envoltorio para los demás campos del perfil disponibles en `AuthContext`.
+
+**Corrección:** Se añadió estructura vertical dentro del `px-4 py-3`:
+
+```jsx
+// ANTES — solo el badge
+<div className="px-4 py-3 border-b border-border-primary">
+  <div className="inline-flex ... bg-accent-cyan/10 ...">
+    {role}
+  </div>
+</div>
+
+// DESPUÉS — nombre + email + badge
+<div className="px-4 py-3 border-b border-border-primary">
+  <div>
+    <p style={{ color: 'var(--text-primary)' }}>
+      {profile?.name || user?.displayName || 'Usuario'}
+    </p>
+    <p style={{ color: 'var(--text-muted)' }}>
+      {profile?.email || user?.email || ''}
+    </p>
+    <div className="inline-flex ... bg-accent-cyan/10 ...">
+      {role}
+    </div>
+  </div>
+</div>
+```
+
+---
+
+### Fix 10 — AIPentesting.tsx: sin selector de modo y sin logs en vivo
+
+**Archivos modificados:**
+- `dani-eth/frontend/src/pages/AIPentesting.tsx`
+- `dani-eth/frontend/src/types/campaign.ts`
+- `Orquestador_AI_ETH/orchestrator/core/campaign_manager.py` (TeeWriter + obtener_logs)
+- `Orquestador_AI_ETH/orchestrator/routes/campaign.py` (GET /campaign/logs)
+
+**Problema:** La página de AI Pentesting no permitía elegir entre reconocimiento puro y explotación completa. Los logs del Orquestador (`print()`) nunca llegaban al Frontend — `status?.logs` siempre devolvía `[]` porque el endpoint de status no los incluía.
+
+**Correcciones:**
+
+**A. Selector de modo de campaña**
+
+Dos tarjetas clicables en la fase `select` antes del botón de inicio:
+
+| Valor enviado | Comportamiento en el Orquestador |
+|---|---|
+| `"exploration"` | `dirigir_campaña()` elimina `explotacion` del dict de fases antes de que el CommanderAgent tome decisiones |
+| `"full"` (default) | Comportamiento existente — CommanderAgent decide si explotar según los vectores hallados |
+
+El valor se propaga: `AIPentesting → campaignService.start() → Backend → Orquestador → commander.py`
+
+**B. Captura de logs (TeeWriter)**
+
+En `campaign_manager.py`, nueva clase `TeeWriter` que intercepta `sys.stdout` durante el hilo de campaña:
+
+```python
+class TeeWriter:
+    def write(self, text: str) -> int:
+        self._original.write(text)   # sigue imprimiendo en consola
+        # acumula hasta \n y añade la línea a self._lines
+        ...
+```
+
+El `_run()` envuelve toda la ejecución de `run_campaign()`:
+```python
+sys.stdout = TeeWriter(original_stdout, self._log_lines)
+try:
+    run_campaign(...)
+finally:
+    sys.stdout = original_stdout
+```
+
+**C. Endpoint GET /campaign/logs**
+
+```python
+@router.get("/logs")
+def logs():
+    return {"logs": campaign_manager.obtener_logs()}
+```
+
+**D. Polling desde el Frontend**
+
+`AIPentesting.tsx` tiene ahora un segundo `setInterval` independiente (cada 2.5 s) que llama directamente al Orquestador en `http://localhost:8001/campaign/logs`. La terminal negra con indicador "EN VIVO" se auto-hace scroll al último log.
+
+---
+
+## Tabla de contratos alineados (actualizada)
 
 | Backend llama | Orquestador expone | Estado |
 |---|---|---|
@@ -218,6 +352,8 @@ start "Runner (Docker)" cmd /k "cd danieth-backend_runner-frontend\backend_runne
 | `PUT  /findings/{id}/status` | `PUT  /findings/{id}/status` | ✅ (fix 3) |
 | `PUT  /findings/{id}/remediated` | `PUT  /findings/{id}/remediated` | ✅ (fix 3) |
 | `GET  /dashboard/summary` | `GET  /dashboard/summary` | ✅ (fix 3) |
+| Frontend → `GET  /campaign/logs` (directo al Orquestador) | `GET  /campaign/logs` | ✅ (fix 10) |
+| Orquestador → `POST /api/v1/reports` (Backend) | `POST /reports` (Backend) | ✅ (fix 8) |
 
 ---
 

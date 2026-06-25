@@ -9,12 +9,16 @@ basta añadir su `Fase` en `construir_fases()` (ver el comentario allí); el
 CommanderAgent no necesita cambios.
 """
 
+import datetime
+
+import requests
+
 from agents.commander_agent import CommanderAgent, Fase
 from agents.explorer import crear_explorador, explorador, decidir_iteracion
 from agents.exploiter import fase_explotacion
 from agents.judge import crear_juez
 from agents.reporter import crear_reportador
-from config import cargar_objetivo, SESION_ID
+from config import cargar_objetivo, SESION_ID, BACKEND_URL, ORCHESTRATOR_SERVICE_TOKEN
 from metricas import iniciar_coleccion, finalizar_coleccion, coleccion_activa
 from metricas.reporte import generar_reporte_metricas
 
@@ -106,6 +110,35 @@ def _fase_exploracion(target: str, sesion_id: int = SESION_ID, control=None, con
     if contexto is not None:
         contexto["memoria_exploracion"] = agente.memoria
 
+    # Notifica cada hallazgo y flag al backend para persistencia en Firestore.
+    _campaign_id = (contexto or {}).get("campaign_id", "")
+    _hallazgos = agente.memoria.get("hallazgos", [])
+    _flags = agente.memoria.get("flags", [])
+    if _hallazgos or _flags:
+        print(f"\n[BACKEND] Notificando {len(_hallazgos)} hallazgo(s) y {len(_flags)} flag(s) al backend.")
+    for hallazgo_txt in _hallazgos:
+        _notificar_hallazgo_al_backend(
+            {
+                "title": str(hallazgo_txt)[:120],
+                "description": str(hallazgo_txt),
+                "severity": "info",
+                "type": "reconnaissance",
+            },
+            _campaign_id,
+            target,
+        )
+    for flag in _flags:
+        _notificar_hallazgo_al_backend(
+            {
+                "title": f"Flag: {str(flag)[:100]}",
+                "description": str(flag),
+                "severity": "critical",
+                "type": "flag",
+            },
+            _campaign_id,
+            target,
+        )
+
     # Cierre de la fase: registra cobertura y motivo de término para las métricas.
     if col is not None:
         col.set_memoria_final(agente.memoria)
@@ -153,9 +186,68 @@ def construir_fases() -> dict[str, Fase]:
     }
 
 
+# --- Envío de hallazgos y reporte al backend --------------------------------
+
+def _notificar_hallazgo_al_backend(hallazgo: dict, campaign_id: str, target: str) -> None:
+    """Envía un hallazgo individual al backend via POST /api/v1/findings."""
+    try:
+        payload = {
+            "campaign_id": campaign_id or f"local-{SESION_ID}",
+            "target": target,
+            **hallazgo,
+        }
+        url = f"{BACKEND_URL}/api/v1/findings"
+        title = str(hallazgo.get("title", ""))[:60]
+        print(f"[BACKEND] Enviando hallazgo: {title!r} → {url}")
+        resp = requests.post(
+            url,
+            json=payload,
+            headers={"X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN},
+            timeout=15,
+        )
+        if resp.ok:
+            print(f"[BACKEND] Hallazgo guardado. finding_id: {resp.json().get('finding_id')}")
+        else:
+            print(f"[BACKEND] Error al guardar hallazgo: {resp.status_code} — {resp.text[:200]}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[BACKEND] No se pudo enviar el hallazgo: {e}")
+
+
+def _enviar_reporte_al_backend(ruta: str, target: str, campaign_id: str) -> None:
+    """Lee el reporte Markdown generado y lo envía al backend via POST /api/v1/reports."""
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            contenido = f.read()
+
+        payload = {
+            "campaign_id": campaign_id or f"local-{SESION_ID}",
+            "target": target,
+            "type": "technical",
+            "summary": {"markdown": contenido},
+            "findings": [],
+            "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+        }
+        url = f"{BACKEND_URL}/api/v1/reports"
+        print(f"[BACKEND] Enviando reporte → {url}")
+        print(f"[BACKEND] campaign_id={payload['campaign_id']!r}, target={payload['target']!r}, chars={len(contenido)}")
+        resp = requests.post(
+            url,
+            json=payload,
+            headers={"X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN},
+            timeout=30,
+        )
+        print(f"[BACKEND] Respuesta HTTP {resp.status_code}: {resp.text[:300]}")
+        if resp.ok:
+            print(f"[BACKEND] Reporte guardado. report_id: {resp.json().get('report_id')}")
+        else:
+            print(f"[BACKEND] Error al enviar reporte: {resp.status_code} — {resp.text[:400]}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[BACKEND] No se pudo enviar el reporte al backend: {e}")
+
+
 # --- Flujo de dirección -----------------------------------------------------
 
-def dirigir_campaña(target: str, sesion_id: int = SESION_ID, control=None) -> str:
+def dirigir_campaña(target: str, sesion_id: int = SESION_ID, control=None, campaign_id: str = "", modo: str = "full") -> str:
     """Punto de entrada del MAS: el Commander dirige la campaña de inicio a fin.
 
     `control`, si se entrega, se propaga a las fases para permitir pausar/detener
@@ -173,9 +265,16 @@ def dirigir_campaña(target: str, sesion_id: int = SESION_ID, control=None) -> s
     print("#" * 60)
 
     fases = construir_fases()
+
+    # En modo solo exploración, eliminar la fase de explotación del registro.
+    if modo == "exploration":
+        fases = {k: v for k, v in fases.items() if k != "explotacion"}
+        print("[COMMANDER] Modo 'Solo Exploración' activo — fase de explotación deshabilitada.")
+
     completadas: list[str] = []
     reportes: list[str] = []
-    contexto: dict = {}  # estado compartido entre fases (p. ej. la KB de exploración)
+    # campaign_id y target disponibles para que las fases puedan notificar al backend.
+    contexto: dict = {"campaign_id": campaign_id, "target": target}
 
     try:
         while True:
@@ -200,6 +299,7 @@ def dirigir_campaña(target: str, sesion_id: int = SESION_ID, control=None) -> s
         print("=" * 50)
         ruta = reportador.generar_reporte(reportes, target=target, mision=mision)
         print(f"Reporte guardado en: {ruta}")
+        _enviar_reporte_al_backend(ruta, target, campaign_id)
         return ruta
     except BaseException as e:
         # Si la campaña se detiene o falla, deja registro del motivo en las métricas.

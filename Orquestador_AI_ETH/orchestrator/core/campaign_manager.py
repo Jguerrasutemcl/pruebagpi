@@ -8,6 +8,8 @@ multi-campaña con identificadores se implementará más adelante.
 """
 
 import enum
+import io
+import sys
 import threading
 
 from agents.commander import dirigir_campaña
@@ -27,14 +29,52 @@ class CampañaDetenida(Exception):
     """Se lanza desde un checkpoint cuando se solicitó detener la campaña."""
 
 
-def run_campaign(target: str, sesion_id: int = SESION_ID, control: "CampaignManager | None" = None) -> str:
+class TeeWriter:
+    """Redirige escrituras a dos destinos: stdout original y lista de líneas en memoria.
+
+    Acumula caracteres hasta encontrar un salto de línea y entonces empuja la
+    línea completa a `_lines`. Las líneas vacías se descartan.
+    """
+
+    def __init__(self, original, lines: list):
+        self._original = original
+        self._lines = lines
+        self._accum = ""
+
+    def write(self, text: str) -> int:
+        self._original.write(text)
+        self._accum += text
+        while "\n" in self._accum:
+            line, self._accum = self._accum.split("\n", 1)
+            stripped = line.rstrip("\r")
+            if stripped:
+                self._lines.append(stripped)
+        return len(text)
+
+    def flush(self):
+        self._original.flush()
+
+    def isatty(self) -> bool:
+        return False
+
+    def fileno(self) -> int:
+        return self._original.fileno()
+
+
+def run_campaign(
+    target: str,
+    sesion_id: int = SESION_ID,
+    control: "CampaignManager | None" = None,
+    campaign_id: str = "",
+    modo: str = "full",
+) -> str:
     """Ejecuta el flujo completo de la campaña para un objetivo.
 
     Delega la orquestación en el Commander (`dirigir_campaña`), que decide qué
     fases/agentes actúan. `control`, si se entrega, se propaga para permitir
     pausar o detener de forma cooperativa. Devuelve la ruta del reporte final.
     """
-    return dirigir_campaña(target, sesion_id=sesion_id, control=control)
+    return dirigir_campaña(target, sesion_id=sesion_id, control=control, campaign_id=campaign_id, modo=modo)
 
 
 class CampaignManager:
@@ -51,13 +91,22 @@ class CampaignManager:
         self.estado = EstadoCampaña.INACTIVO
         self.target: str | None = None
         self.sesion_id: int = SESION_ID
+        self.campaign_id: str = ""
+        self.modo: str = "full"
         self.iteracion_actual = 0
         self.ruta_reporte: str | None = None
         self.error: str | None = None
+        self._log_lines: list[str] = []
 
     # --- API de control (llamada desde los endpoints) ---
 
-    def iniciar(self, target: str, sesion_id: int = SESION_ID) -> None:
+    def iniciar(
+        self,
+        target: str,
+        sesion_id: int = SESION_ID,
+        campaign_id: str = "",
+        modo: str = "full",
+    ) -> None:
         with self._lock:
             if self.estado in (EstadoCampaña.EJECUTANDO, EstadoCampaña.PAUSADO):
                 raise RuntimeError("Ya hay una campaña en curso. Deténla antes de iniciar otra.")
@@ -68,11 +117,18 @@ class CampaignManager:
             self.estado = EstadoCampaña.EJECUTANDO
             self.target = target
             self.sesion_id = sesion_id
+            self.campaign_id = campaign_id
+            self.modo = modo
             self.iteracion_actual = 0
             self.ruta_reporte = None
             self.error = None
+            self._log_lines = []
 
-            self._hilo = threading.Thread(target=self._run, args=(target, sesion_id), daemon=True)
+            self._hilo = threading.Thread(
+                target=self._run,
+                args=(target, sesion_id, campaign_id, modo),
+                daemon=True,
+            )
             self._hilo.start()
 
     def pausar(self) -> None:
@@ -98,12 +154,19 @@ class CampaignManager:
             self._evento_pausa.set()
             self.estado = EstadoCampaña.DETENIDO
 
+    def obtener_logs(self) -> list[str]:
+        """Devuelve una copia de las líneas de log capturadas hasta el momento."""
+        with self._lock:
+            return list(self._log_lines)
+
     def estado_actual(self) -> dict:
         with self._lock:
             return {
                 "estado": self.estado.value,
                 "target": self.target,
                 "sesion_id": self.sesion_id,
+                "campaign_id": self.campaign_id,
+                "modo": self.modo,
                 "iteracion_actual": self.iteracion_actual,
                 "ruta_reporte": self.ruta_reporte,
                 "error": self.error,
@@ -126,9 +189,12 @@ class CampaignManager:
 
     # --- Hilo de trabajo ---
 
-    def _run(self, target: str, sesion_id: int) -> None:
+    def _run(self, target: str, sesion_id: int, campaign_id: str, modo: str) -> None:
+        original_stdout = sys.stdout
+        tee = TeeWriter(original_stdout, self._log_lines)
+        sys.stdout = tee
         try:
-            ruta = run_campaign(target, sesion_id=sesion_id, control=self)
+            ruta = run_campaign(target, sesion_id=sesion_id, control=self, campaign_id=campaign_id, modo=modo)
             with self._lock:
                 self.ruta_reporte = ruta
                 # Si se solicitó detener justo al final (sin checkpoint pendiente
@@ -145,6 +211,12 @@ class CampaignManager:
             with self._lock:
                 self.error = str(e)
                 self.estado = EstadoCampaña.ERROR
+        finally:
+            sys.stdout = original_stdout
+            # Vaciar acumulador pendiente del Tee si terminó sin newline final.
+            if tee._accum.strip():
+                with self._lock:
+                    self._log_lines.append(tee._accum.strip())
 
 
 # Instancia única compartida por la API (sesión única por ahora).

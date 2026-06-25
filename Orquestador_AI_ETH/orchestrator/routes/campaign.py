@@ -17,6 +17,11 @@ router = APIRouter(prefix="/campaign", tags=["campaign"])
 class IniciarCampaña(BaseModel):
     target: str = Field(..., description="IP o host objetivo (entorno autorizado)")
     sesion_id: int = Field(SESION_ID, description="ID de sesión del runner")
+    campaign_id: str | None = Field(None, description="ID de campaña asignado por el backend")
+    modo: str | None = Field(
+        None,
+        description="Modo de campaña: 'exploration' (solo reconocimiento) o 'full' (reconocimiento + explotación)",
+    )
 
 
 class ReporteResumen(BaseModel):
@@ -40,7 +45,12 @@ class ReporteCompleto(ReporteResumen):
 def iniciar(payload: IniciarCampaña):
     """Inicia la exploración contra el objetivo indicado."""
     try:
-        campaign_manager.iniciar(payload.target, payload.sesion_id)
+        campaign_manager.iniciar(
+            payload.target,
+            payload.sesion_id,
+            campaign_id=payload.campaign_id or "",
+            modo=payload.modo or "full",
+        )
     except RuntimeError as e:
         raise HTTPException(status_code=409, detail=str(e))
     return campaign_manager.estado_actual()
@@ -80,6 +90,12 @@ def detener():
 def estado():
     """Devuelve el estado actual del orquestador."""
     return campaign_manager.estado_actual()
+
+
+@router.get("/logs")
+def logs():
+    """Devuelve las líneas de log capturadas durante la campaña activa."""
+    return {"logs": campaign_manager.obtener_logs()}
 
 
 # --- Reportes ejecutivos ---------------------------------------------------

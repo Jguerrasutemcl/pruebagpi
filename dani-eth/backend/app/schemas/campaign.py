@@ -7,6 +7,7 @@ class CampaignStart(BaseModel):
     target: str
     scan_type: Literal["full", "quick", "custom"] = "quick"
     scope: list[str] = ["ports", "web"]
+    modo: str | None = None
 
 
 class CampaignStatusResponse(BaseModel):

@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { reportService } from '@/services/reportService';
 import { campaignService } from '@/services/campaignService';
-import type { ReportSummary } from '@/types/report';
+import type { ReportSummary, ReportDetail } from '@/types/report';
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<ReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+
+  // ── Visor de reporte seleccionado ─────────────────────────────────────────
+  const [selectedReport, setSelectedReport] = useState<ReportDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   // ── Consulta por Campaign ID ───────────────────────────────────────────────
   const [campaignInput, setCampaignInput] = useState('');
@@ -26,6 +32,23 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleViewReport = async (reportId: string) => {
+    if (selectedReport?.report_id === reportId) {
+      setSelectedReport(null);
+      return;
+    }
+    setLoadingDetail(true);
+    setDetailError(null);
+    try {
+      const detail = await reportService.getById(reportId);
+      setSelectedReport(detail);
+    } catch {
+      setDetailError('No se pudo cargar el contenido del reporte.');
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const handleQueryReport = async () => {
     const id = campaignInput.trim();
     if (!id) return;
@@ -44,6 +67,14 @@ export default function ReportsPage() {
 
   const handleDownloadPdf = (reportId: string) => {
     reportService.downloadPdf(reportId);
+  };
+
+  // Extrae el Markdown del campo summary si no hay markdown_url
+  const getMarkdownContent = (detail: ReportDetail): string | null => {
+    if (detail.summary && typeof detail.summary === 'object' && 'markdown' in detail.summary) {
+      return detail.summary.markdown as string;
+    }
+    return null;
   };
 
   return (
@@ -140,43 +171,123 @@ export default function ReportsPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ background: 'var(--bg-tertiary)' }}>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Objetivo</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Campaign ID</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Fecha</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
-              {reports.map(report => (
-                <tr key={report.report_id}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <td className="px-5 py-3 text-sm" style={{ color: 'var(--text-primary)' }}>
-                    {report.target}
-                  </td>
-                  <td className="px-5 py-3 font-mono text-xs" style={{ color: 'var(--accent-cyan)' }}>
-                    {report.campaign_id.slice(0, 8)}...
-                  </td>
-                  <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {new Date(report.generated_at).toLocaleDateString('es-ES', {
-                      day: '2-digit', month: 'short', year: 'numeric',
-                    })}
-                  </td>
-                  <td className="px-5 py-3">
-                    <button
-                      onClick={() => handleDownloadPdf(report.report_id)}
-                      className="text-xs font-bold hover:underline"
-                      style={{ color: 'var(--accent-cyan)' }}>
-                      ⬇ Descargar PDF
-                    </button>
-                  </td>
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: 'var(--bg-tertiary)' }}>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Objetivo</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Campaign ID</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Fecha</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
+                {reports.map(report => (
+                  <tr key={report.report_id}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    <td className="px-5 py-3 text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {report.target}
+                    </td>
+                    <td className="px-5 py-3 font-mono text-xs" style={{ color: 'var(--accent-cyan)' }}>
+                      {report.campaign_id.slice(0, 8)}...
+                    </td>
+                    <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(report.generated_at).toLocaleDateString('es-ES', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                      })}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleViewReport(report.report_id)}
+                          disabled={loadingDetail && selectedReport?.report_id !== report.report_id}
+                          className="text-xs font-bold hover:underline disabled:opacity-40"
+                          style={{ color: 'var(--accent-cyan)' }}>
+                          {selectedReport?.report_id === report.report_id ? '▲ Cerrar' : '📄 Ver'}
+                        </button>
+                        {report.markdown_url && (
+                          <a
+                            href={report.markdown_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-bold hover:underline"
+                            style={{ color: 'var(--text-muted)' }}>
+                            ↗ .md
+                          </a>
+                        )}
+                        {report.pdf_url && (
+                          <button
+                            onClick={() => handleDownloadPdf(report.report_id)}
+                            className="text-xs font-bold hover:underline"
+                            style={{ color: 'var(--text-muted)' }}>
+                            ⬇ PDF
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Error al cargar detalle */}
+            {detailError && (
+              <div className="px-5 py-3 text-xs" style={{ color: 'var(--severity-critical)' }}>{detailError}</div>
+            )}
+
+            {/* Visor de reporte expandido */}
+            {selectedReport && (
+              <div className="border-t px-6 py-5" style={{ borderColor: 'var(--accent-cyan)40', background: 'var(--bg-tertiary)' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--accent-cyan)' }}>
+                    📄 {selectedReport.target} — {new Date(selectedReport.generated_at).toLocaleString('es-ES')}
+                  </h3>
+                  <button
+                    onClick={() => setSelectedReport(null)}
+                    className="text-xs px-3 py-1 rounded-lg border"
+                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-muted)' }}>
+                    ✕ Cerrar
+                  </button>
+                </div>
+
+                {/* Contenido Markdown */}
+                {(() => {
+                  const md = getMarkdownContent(selectedReport);
+                  if (md) {
+                    return (
+                      <div
+                        className="prose prose-invert max-w-none text-sm overflow-y-auto rounded-lg p-4"
+                        style={{
+                          background: '#050914',
+                          border: '1px solid var(--border-primary)',
+                          maxHeight: '60vh',
+                          color: 'var(--text-secondary)',
+                        }}>
+                        <ReactMarkdown>{md}</ReactMarkdown>
+                      </div>
+                    );
+                  }
+                  if (selectedReport.markdown_url) {
+                    return (
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Reporte disponible en Supabase.{' '}
+                        <a href={selectedReport.markdown_url} target="_blank" rel="noreferrer"
+                           className="underline" style={{ color: 'var(--accent-cyan)' }}>
+                          Abrir en nueva pestaña ↗
+                        </a>
+                      </p>
+                    );
+                  }
+                  return (
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      El contenido del reporte no está disponible localmente.
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
