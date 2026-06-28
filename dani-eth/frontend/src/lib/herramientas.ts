@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { orquestadorClient as apiClient } from './api';
 
 export async function listarHerramientas() {
   const { data } = await apiClient.get('/proxy/herramientas');
