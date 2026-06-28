@@ -11,6 +11,7 @@
     "delete": "Supprimer",
     "edit": "Modifier",
     "search": "Rechercher",
+    "retry": "Réessayer",
     "comingSoon": "Bientôt disponible",
     "comingSoonDescription": "Cette section est en cours de développement. Nous la construirons dans les prochains sprints."
   },
@@ -225,7 +226,19 @@
       "execSummary": "Résumé exécutif",
       "execDesc": "Rapport complet consolidant toutes les métriques et tendances de sécurité pour la direction",
       "generate": "Générer le rapport",
-      "generateExec": "Générer le rapport exécutif"
+      "generateExec": "Générer le rapport exécutif",
+      "loading": "Chargement des rapports...",
+      "error": "Impossible de charger les rapports. Veuillez réessayer plus tard.",
+      "empty": "Aucun rapport pour le moment. Exécutez une campagne pour en générer un.",
+      "backButton": "Retour",
+      "viewReport": "Afficher le rapport",
+      "iterationsLabel": "Itérations",
+      "dateLabel": "Date",
+      "targetLabel": "Cible",
+      "missionLabel": "Mission",
+      "reportDetail": "Détails du rapport",
+      "reportNotFound": "Rapport introuvable",
+      "reportError": "Erreur lors du chargement du rapport"
     },
     "settings": {
       "title": "Paramètres",

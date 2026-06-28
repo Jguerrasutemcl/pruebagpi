@@ -5,6 +5,7 @@ from core.runner_client import (
     listar_herramientas,
     formatear_catalogo,
 )
+from core import event_bus
 from config import cargar_objetivo, SESION_ID
 
 
@@ -60,15 +61,16 @@ SYSTEM_PROMPT_EXPLORER = (
 TARGET = "localhost"
 
 
-def crear_explorador(sesion_id: int = SESION_ID, objetivo_target: str = "") -> ExplorerAgent:
+def crear_explorador(sesion_id: int = SESION_ID, objetivo_target: str = "", mision: str = "") -> ExplorerAgent:
     """Crea una instancia nueva del agente Explorador.
 
-    Inyecta en el prompt el objetivo de la misión (objetivo.txt) y el catálogo
+    Inyecta en el prompt la `mision` construida para la campaña y el catálogo
     real de herramientas del runner, leído en cada creación de campaña. Le
     asigna un Summarizer para mantener su memoria de trabajo estructurada.
     `objetivo_target` es el host/IP bajo análisis (se guarda en la memoria).
+    Si `mision` viene vacía, cae al fallback de `objetivo.txt`.
     """
-    objetivo = cargar_objetivo()
+    objetivo = mision or cargar_objetivo()
     catalogo = listar_herramientas()
     # El Selector elige el pool de herramientas pertinente para el rol de reconocimiento.
     herramientas = crear_selector().seleccionar(catalogo, objetivo, rol="reconocimiento")
@@ -94,6 +96,23 @@ def decidir_iteracion(agente: ExplorerAgent) -> None:
     )
 
 
+def reporte_parcial(agente) -> str:
+    """Genera un reporte markdown desde la memoria actual del agente, sin más ejecución.
+
+    Se usa cuando la campaña se detiene a mitad de una fase: rescata los hallazgos
+    acumulados en la KB hasta el checkpoint para que no se pierdan y el Reportador
+    pueda incluirlos en el reporte ejecutivo. Sirve para Explorador y Explotador
+    (ambos exponen `preguntar(mensaje, usar_tools=False)`).
+    """
+    prompt = (
+        "La campaña se detuvo a petición del usuario. Escribe un reporte markdown con los "
+        "hallazgos acumulados en tu memoria hasta este momento (servicios, rutas, archivos, "
+        "flags y cualquier dato relevante). "
+        "NO tienes herramientas disponibles: limítate a escribir texto markdown."
+    )
+    return agente.preguntar(prompt, usar_tools=False) or ""
+
+
 def inicio_exploracion(agente: ExplorerAgent, target: str) -> None:
     agente.preguntar(
         f"Haz un escaneo de reconocimiento inicial con nmap sobre el objetivo {target}. "
@@ -108,11 +127,13 @@ def explorador(agente: ExplorerAgent, target: str, primera_iteracion: bool = Tru
         print("\n" + "=" * 50)
         print("  FASE 1 — ESCANEO INICIAL")
         print("=" * 50)
+        event_bus.emitir("stage", "explorer", {"etapa": "escaneo_inicial"}, fase="exploracion")
         inicio_exploracion(agente, target)
     else:
         print("\n" + "=" * 50)
         print("  FASE 1 — GENERANDO NUEVAS TAREAS")
         print("=" * 50)
+        event_bus.emitir("stage", "explorer", {"etapa": "generando_tareas"}, fase="exploracion")
         agente.generar_tareas("Basándote en los hallazgos anteriores, genera las próximas tareas de exploración.")
 
     print("\n" + "=" * 50)
@@ -124,11 +145,13 @@ def explorador(agente: ExplorerAgent, target: str, primera_iteracion: bool = Tru
     print("\n" + "=" * 50)
     print("  FASE 2 — EJECUCIÓN DE TAREAS")
     print("=" * 50)
+    event_bus.emitir("stage", "explorer", {"etapa": "ejecucion_tareas"}, fase="exploracion")
     agente.ejecutar_tareas(control)
 
     print("\n" + "=" * 50)
     print("  FASE 3 — REPORTE")
     print("=" * 50)
+    event_bus.emitir("stage", "explorer", {"etapa": "reporte"}, fase="exploracion")
     prompt = (
         "Escribe el reporte markdown de hallazgos a partir de tu memoria de exploración. "
         "IMPORTANTE: en este momento NO tienes herramientas disponibles. No puedes llamar ejecutar_herramienta ni finalizar_iteracion. "
@@ -136,6 +159,7 @@ def explorador(agente: ExplorerAgent, target: str, primera_iteracion: bool = Tru
     )
     reporte = agente.preguntar(prompt, usar_tools=False)
     print(reporte)
+    event_bus.emitir("report_generated", "explorer", {"reporte": reporte}, fase="exploracion")
     return reporte
 
 

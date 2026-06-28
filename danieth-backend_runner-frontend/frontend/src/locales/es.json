@@ -11,6 +11,7 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "search": "Buscar",
+    "retry": "Reintentar",
     "comingSoon": "Próximamente",
     "comingSoonDescription": "Esta sección está en desarrollo. La construiremos en los próximos sprints."
   },
@@ -225,7 +226,19 @@
       "execSummary": "Resumen ejecutivo",
       "execDesc": "Reporte integral que consolida métricas y tendencias de seguridad para liderazgo",
       "generate": "Generar reporte",
-      "generateExec": "Generar reporte ejecutivo"
+      "generateExec": "Generar reporte ejecutivo",
+      "loading": "Cargando reportes...",
+      "error": "No se pudieron cargar los reportes. Intenta de nuevo más tarde.",
+      "empty": "Aún no hay reportes. Completa una campaña para generar uno.",
+      "backButton": "Volver",
+      "viewReport": "Ver reporte",
+      "iterationsLabel": "Iteraciones",
+      "dateLabel": "Fecha",
+      "targetLabel": "Target",
+      "missionLabel": "Misión",
+      "reportDetail": "Detalle del Reporte",
+      "reportNotFound": "Reporte no encontrado",
+      "reportError": "Error al cargar el reporte"
     },
     "settings": {
       "title": "Configuración",

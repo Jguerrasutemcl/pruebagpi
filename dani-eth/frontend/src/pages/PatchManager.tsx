@@ -21,7 +21,7 @@ export default function PatchManagerPage() {
     setLoading(true);
     setError(null);
     findingService.listPatches()
-      .then(data => setPatches(data.items))
+      .then(data => setPatches(data.items ?? []))
       .catch(() => setError('No se pudieron cargar los parches. Verifica que el orquestador esté activo.'))
       .finally(() => setLoading(false));
   };

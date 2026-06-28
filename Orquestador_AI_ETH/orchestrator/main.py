@@ -11,7 +11,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import CORS_ORIGINS
-from routes.campaign import router as campaign_router
+from routes.campaign  import router as campaign_router
+from routes.findings  import router as findings_router
+from routes.dashboard import router as dashboard_router
 
 app = FastAPI(title="Dani-ETH Orchestrator API")
 
@@ -28,6 +30,8 @@ app.add_middleware(
 )
 
 app.include_router(campaign_router)
+app.include_router(findings_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/")

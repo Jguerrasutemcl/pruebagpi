@@ -66,10 +66,14 @@ dani-eth-paso1/
 │   └── frontend/                          # React + Vite — puerto 5173
 │       └── src/
 │           ├── pages/
-│           ├── components/
+│           ├── components/                # auth/ · dashboard/ · layout/ · team/ · ui/
+│           │                              # CampaignLogFeed.tsx · MapaAgentes.tsx (raíz)
+│           ├── hooks/                     # useCampaignLogs.ts — polling incremental de timeline
 │           ├── services/                  # Capa de servicios API (Axios)
 │           ├── contexts/                  # AuthContext, ThemeContext
-│           ├── lib/                       # firebase.ts, api.ts, i18n.ts, socket.ts
+│           ├── lib/                       # api.ts · firebase.ts · herramientas.ts · i18n.ts
+│           │                              # orquestador.ts (Modo/Profundidad/Restricciones/
+│           │                              #   CampaignEvent/obtenerLogs) · socket.ts
 │           ├── locales/                   # i18n: es, en, de, fr
 │           └── types/
 │

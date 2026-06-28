@@ -11,6 +11,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "search": "Search",
+    "retry": "Retry",
     "comingSoon": "Coming soon",
     "comingSoonDescription": "This section is under development. We'll build it in the upcoming sprints."
   },
@@ -225,7 +226,19 @@
       "execSummary": "Executive Summary",
       "execDesc": "Comprehensive report consolidating all security metrics and trends for leadership",
       "generate": "Generate Report",
-      "generateExec": "Generate Executive Report"
+      "generateExec": "Generate Executive Report",
+      "loading": "Loading reports...",
+      "error": "Failed to load reports. Please try again later.",
+      "empty": "No reports yet. Complete a campaign to generate one.",
+      "backButton": "Back",
+      "viewReport": "View Report",
+      "iterationsLabel": "Iterations",
+      "dateLabel": "Date",
+      "targetLabel": "Target",
+      "missionLabel": "Mission",
+      "reportDetail": "Report Detail",
+      "reportNotFound": "Report not found",
+      "reportError": "Error loading report"
     },
     "settings": {
       "title": "Settings",

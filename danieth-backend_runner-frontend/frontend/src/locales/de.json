@@ -11,6 +11,7 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "search": "Suchen",
+    "retry": "Erneut versuchen",
     "comingSoon": "Demnächst",
     "comingSoonDescription": "Dieser Bereich wird gerade entwickelt. Wir bauen ihn in den nächsten Sprints."
   },
@@ -225,7 +226,19 @@
       "execSummary": "Executive Summary",
       "execDesc": "Umfassender Bericht mit allen Sicherheitsmetriken und Trends für die Führungsebene",
       "generate": "Bericht erstellen",
-      "generateExec": "Executive-Bericht erstellen"
+      "generateExec": "Executive-Bericht erstellen",
+      "loading": "Berichte werden geladen...",
+      "error": "Berichte konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "empty": "Noch keine Berichte vorhanden. Führen Sie eine Kampagne durch, um einen Bericht zu erstellen.",
+      "backButton": "Zurück",
+      "viewReport": "Bericht anzeigen",
+      "iterationsLabel": "Iterationen",
+      "dateLabel": "Datum",
+      "targetLabel": "Ziel",
+      "missionLabel": "Mission",
+      "reportDetail": "Berichtdetails",
+      "reportNotFound": "Bericht nicht gefunden",
+      "reportError": "Fehler beim Laden des Berichts"
     },
     "settings": {
       "title": "Einstellungen",

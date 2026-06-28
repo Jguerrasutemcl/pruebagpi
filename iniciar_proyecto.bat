@@ -5,7 +5,7 @@ echo ===================================
 
 :: 1. Backend Principal (Puerto 8000)
 echo Iniciando el Backend Principal (Puerto 8000)...
-start "Backend Principal" cmd /k "cd dani-eth\backend && .\venv\Scripts\activate.bat && uvicorn app.main:app --reload --port 8000"
+start "Backend Principal" cmd /k "cd dani-eth\backend && .\venv\Scripts\activate.bat && python -m uvicorn app.main:app --reload --port 8000"
 
 :: 2. Frontend (Puerto 5173)
 echo Iniciando el Frontend (Puerto 5173)...
@@ -13,7 +13,7 @@ start "Frontend" cmd /k "cd dani-eth\frontend && npm run dev"
 
 :: 3. Orquestador de IA (Puerto 8001)
 echo Iniciando el Orquestador de IA (Puerto 8001)...
-start "Orquestador IA" cmd /k ".\venv\Scripts\activate.bat && cd Orquestador_AI_ETH\orchestrator && uvicorn main:app --reload --port 8001"
+start "Orquestador IA" cmd /k "cd Orquestador_AI_ETH\orchestrator && ..\..\venv\Scripts\activate.bat && python -m uvicorn main:app --reload --port 8001"
 
 :: 4. Runner (Tool Registry :8003 + Tool Executor :8004)
 ::    Se usa docker-compose desde backend_runner/ para evitar colision de puertos

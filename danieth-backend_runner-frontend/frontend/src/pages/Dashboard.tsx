@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+
 import ActiveScansWidget from '@/components/dashboard/ActiveScansWidget';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import PatchProgressWidget from '@/components/dashboard/PatchProgressWidget';

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { dashboardService, type DashboardSummary } from '@/services/dashboardService';
+import { findingService, type Finding } from '@/services/findingService';
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: 'var(--severity-critical)',
@@ -21,12 +22,19 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [criticalFindings, setCriticalFindings] = useState<Finding[]>([]);
 
   const loadData = () => {
     setLoading(true);
     setError(null);
-    dashboardService.getSummary()
-      .then(setData)
+    Promise.all([
+      dashboardService.getSummary(),
+      findingService.listAll({ severity: 'critical', limit: 5 }).catch(() => ({ findings: [] as Finding[], total: 0, limit: 5, offset: 0 })),
+    ])
+      .then(([summary, findingsResp]) => {
+        setData(summary);
+        setCriticalFindings(findingsResp.findings);
+      })
       .catch(() => setError('No se pudo conectar con el backend. Verifica que esté activo en http://localhost:8000'))
       .finally(() => setLoading(false));
   };
@@ -166,6 +174,47 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Hallazgos Críticos Recientes (Fix 16) */}
+      <div className="rounded-xl border overflow-hidden"
+           style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+        <div className="px-5 py-4 font-bold text-sm border-b flex items-center justify-between"
+             style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}>
+          <span>🚨 Hallazgos Críticos Recientes</span>
+          {criticalFindings.length > 0 && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded"
+                  style={{ background: 'var(--severity-critical)20', color: 'var(--severity-critical)' }}>
+              {criticalFindings.length}
+            </span>
+          )}
+        </div>
+        {criticalFindings.length === 0 ? (
+          <div className="p-6 text-sm text-center" style={{ color: 'var(--text-muted)' }}>
+            No hay hallazgos críticos registrados. Inicia una campaña de AI Pentesting para detectar vulnerabilidades.
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
+            {criticalFindings.map(f => (
+              <div key={f.finding_id} className="px-5 py-3 flex items-start justify-between gap-4"
+                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
+                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold truncate" style={{ color: 'var(--severity-critical)' }}>
+                    {f.title || f.type}
+                  </div>
+                  <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                    {f.target || f.host || '—'} · {f.description.slice(0, 80)}{f.description.length > 80 ? '…' : ''}
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0"
+                      style={{ background: 'var(--severity-critical)20', color: 'var(--severity-critical)', border: '1px solid var(--severity-critical)30' }}>
+                  CRITICAL
+                </span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

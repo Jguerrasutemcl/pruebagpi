@@ -377,4 +377,46 @@ campaign_manager.add_finding({
 El Orquestador usa `urllib` (síncrono/bloqueante) para comunicarse con el Runner dentro de un contexto FastAPI asíncrono. Esto bloquea el event loop durante el polling de tareas. No se corrigió en esta iteración porque el flujo del Runner corre en un hilo de fondo (`threading.Thread`), lo que mitiga el problema. La corrección completa requiere refactorizar a `httpx.AsyncClient`, tarea pendiente para la próxima iteración.
 
 ### Sobre el frontend duplicado
-Existen dos directorios frontend (`dani-eth/frontend` y `danieth-backend_runner-frontend/frontend`). El primero es el activo según `iniciar_proyecto.bat`. El segundo puede eliminarse o documentarse como versión alternativa.
+Existen dos directorios frontend (`dani-eth/frontend` y `danieth-backend_runner-frontend/frontend`). El primero es el activo según `iniciar_proyecto.bat`. El segundo era la versión de referencia del runner; su AIPentesting y componentes de orquestador ya fueron integrados en `dani-eth/frontend` (ver Fix 12).
+
+---
+
+### Fix 11 — PatchManager crash: `Cannot read properties of undefined (reading 'filter')`
+
+**Archivo:** `dani-eth/frontend/src/pages/PatchManager.tsx`
+
+**Problema:** `setPatches(data.items)` asignaba `undefined` al estado cuando el Orquestador devolvía `{ items: undefined, total: 0 }` (respuesta vacía válida). En el siguiente render, `patches.filter(...)` crasheaba porque `patches` era `undefined` en lugar del array vacío inicial.
+
+**Corrección:** Añadir fallback nulo:
+```tsx
+// ANTES
+.then(data => setPatches(data.items))
+
+// DESPUÉS
+.then(data => setPatches(data.items ?? []))
+```
+
+---
+
+### Fix 12 — AIPentesting.tsx: integración de la versión del orquestador nativo
+
+**Archivos creados / modificados:**
+- `dani-eth/frontend/src/pages/AIPentesting.tsx` (reemplazado)
+- `dani-eth/frontend/src/lib/orquestador.ts` (expandido)
+- `dani-eth/frontend/src/lib/herramientas.ts` (nuevo)
+- `dani-eth/frontend/src/hooks/useCampaignLogs.ts` (nuevo)
+- `dani-eth/frontend/src/components/CampaignLogFeed.tsx` (nuevo)
+- `dani-eth/frontend/src/components/MapaAgentes.tsx` (nuevo)
+- `dani-eth/frontend/src/styles/globals.css` (animación `agentGlow` añadida)
+- `remark-gfm` instalado en `dani-eth/frontend/package.json`
+
+**Problema:** La página AI Pentesting en `dani-eth/frontend` usaba `targetService` y `campaignService` (flujo Backend → Orquestador mediante campaign_id), diferente al flujo directo del orquestador nativo que usa `lib/orquestador.ts`. No tenía: orquestador autónomo con Modo/Profundidad/Restricciones, mapa visual de agentes, timeline en vivo de eventos, ni ejecución manual de herramientas del runner.
+
+**Corrección:** Se portó íntegramente la versión de `danieth-backend_runner-frontend/frontend/src/pages/AIPentesting.tsx` con todos sus componentes y dependencias. La nueva página incluye:
+- **ControlCampaña**: Iniciar/Pausar/Reanudar/Detener con selección de Modo, Profundidad y Restricciones
+- **MapaAgentes**: Mapa visual con animación de pulso en el agente activo (derivado del último evento de la timeline)
+- **CampaignLogFeed**: Timeline en vivo de eventos con rendering estructurado por tipo (campaign_start, tool_result, report_generated, judge_verdict, etc.) y soporte Markdown
+- **Ejecución manual de herramientas**: Lista dinámica desde `/proxy/herramientas`, formulario generado desde el esquema JSON, resultado estructurado (nmap, nuclei, sqlmap, curl, fallback)
+- **`useCampaignLogs`**: Hook de polling incremental con cursor desde `/campaign/logs`
+
+El `lib/orquestador.ts` fue expandido para incluir `Modo`, `Profundidad`, `Restricciones`, `IniciarCampañaResponse`, `RESTRICCIONES_DEFAULT`, `CampaignEvent`, `LogsResponse` y `obtenerLogs(desde)`.

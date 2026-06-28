@@ -1,4 +1,8 @@
-"""Endpoint de resumen para el dashboard del orquestador."""
+"""Endpoints de resumen para el Dashboard del Frontend.
+
+El Backend llama a GET /dashboard/summary y combina estos datos
+con los conteos locales de Firestore antes de devolvérselos al Frontend.
+"""
 
 from fastapi import APIRouter
 
@@ -9,34 +13,33 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/summary")
 def get_dashboard_summary() -> dict:
-    """Agrega métricas de la sesión activa para el Dashboard principal del Frontend."""
+    """Agrega el estado de la campaña activa y los findings en memoria."""
     estado = campaign_manager.estado_actual()
     findings = campaign_manager.get_findings()
 
-    active = 1 if estado["status"] in ("running", "paused") else 0
+    status = estado.get("status", "stopped")
+    active_campaigns = 1 if status in ("running", "paused") else 0
 
-    by_severity: dict[str, int] = {
-        "critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0
-    }
+    findings_by_severity: dict[str, int] = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     for f in findings:
-        sev = f.get("severity", "low")
-        by_severity[sev] = by_severity.get(sev, 0) + 1
+        sev = (f.get("severity") or "info").lower()
+        if sev in findings_by_severity:
+            findings_by_severity[sev] += 1
 
     recent_campaigns = []
     if estado.get("campaign_id"):
-        recent_campaigns = [
+        recent_campaigns.append(
             {
                 "campaign_id": estado["campaign_id"],
-                "target": estado.get("target"),
-                "status": estado["status"],
-                "started_at": estado.get("started_at"),
-                "finished_at": estado.get("finished_at"),
+                "target": estado.get("target", ""),
+                "status": status,
+                "started_at": estado.get("started_at") or "",
             }
-        ]
+        )
 
     return {
-        "active_campaigns": active,
+        "active_campaigns": active_campaigns,
         "total_findings": len(findings),
-        "findings_by_severity": by_severity,
+        "findings_by_severity": findings_by_severity,
         "recent_campaigns": recent_campaigns,
     }

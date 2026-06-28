@@ -8,12 +8,14 @@ multi-campaña con identificadores se implementará más adelante.
 """
 
 import enum
-import io
 import sys
 import threading
+import uuid
+from datetime import datetime, timezone
 
 from agents.commander import dirigir_campaña
 from config import SESION_ID
+from core import event_bus
 
 
 class EstadoCampaña(str, enum.Enum):
@@ -25,56 +27,73 @@ class EstadoCampaña(str, enum.Enum):
     ERROR = "error"
 
 
+_ESTADO_A_STATUS = {
+    EstadoCampaña.INACTIVO:   "stopped",
+    EstadoCampaña.EJECUTANDO: "running",
+    EstadoCampaña.PAUSADO:    "paused",
+    EstadoCampaña.DETENIDO:   "stopped",
+    EstadoCampaña.FINALIZADO: "finished",
+    EstadoCampaña.ERROR:      "stopped",
+}
+
+
 class CampañaDetenida(Exception):
     """Se lanza desde un checkpoint cuando se solicitó detener la campaña."""
 
 
 class TeeWriter:
-    """Redirige escrituras a dos destinos: stdout original y lista de líneas en memoria.
-
-    Acumula caracteres hasta encontrar un salto de línea y entonces empuja la
-    línea completa a `_lines`. Las líneas vacías se descartan.
-    """
+    """Intercepta sys.stdout durante la campaña y acumula líneas en _lines."""
 
     def __init__(self, original, lines: list):
         self._original = original
         self._lines = lines
-        self._accum = ""
+        self._buf = ""
 
     def write(self, text: str) -> int:
         self._original.write(text)
-        self._accum += text
-        while "\n" in self._accum:
-            line, self._accum = self._accum.split("\n", 1)
-            stripped = line.rstrip("\r")
+        self._buf += text
+        while "\n" in self._buf:
+            line, self._buf = self._buf.split("\n", 1)
+            stripped = line.rstrip()
             if stripped:
                 self._lines.append(stripped)
         return len(text)
 
-    def flush(self):
+    def flush(self) -> None:
         self._original.flush()
 
-    def isatty(self) -> bool:
-        return False
+    def __getattr__(self, name):
+        return getattr(self._original, name)
 
-    def fileno(self) -> int:
-        return self._original.fileno()
+
+def _utcnow() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def run_campaign(
     target: str,
     sesion_id: int = SESION_ID,
     control: "CampaignManager | None" = None,
-    campaign_id: str = "",
-    modo: str = "full",
+    mision: str | None = None,
+    campaign_id: str | None = None,
+    modo: str | None = None,
 ) -> str:
     """Ejecuta el flujo completo de la campaña para un objetivo.
 
     Delega la orquestación en el Commander (`dirigir_campaña`), que decide qué
     fases/agentes actúan. `control`, si se entrega, se propaga para permitir
-    pausar o detener de forma cooperativa. Devuelve la ruta del reporte final.
+    pausar o detener de forma cooperativa. `mision` es el prompt de misión ya
+    construido; si es None, el Commander cae al fallback de `objetivo.txt`.
+    Devuelve la ruta del reporte final.
     """
-    return dirigir_campaña(target, sesion_id=sesion_id, control=control, campaign_id=campaign_id, modo=modo)
+    return dirigir_campaña(
+        target,
+        sesion_id=sesion_id,
+        control=control,
+        mision=mision,
+        campaign_id=campaign_id,
+        modo=modo,
+    )
 
 
 class CampaignManager:
@@ -89,14 +108,21 @@ class CampaignManager:
         self._evento_stop = threading.Event()
 
         self.estado = EstadoCampaña.INACTIVO
+        self.campaign_id: str | None = None
         self.target: str | None = None
         self.sesion_id: int = SESION_ID
-        self.campaign_id: str = ""
-        self.modo: str = "full"
+        self.mision: str | None = None
+        self.modo: str | None = None
+        self.profundidad: str | None = None
+        self.restricciones: dict | None = None
         self.iteracion_actual = 0
         self.ruta_reporte: str | None = None
         self.error: str | None = None
+        self.started_at: str | None = None
+        self.finished_at: str | None = None
+
         self._log_lines: list[str] = []
+        self._findings: list[dict] = []
 
     # --- API de control (llamada desde los endpoints) ---
 
@@ -104,29 +130,39 @@ class CampaignManager:
         self,
         target: str,
         sesion_id: int = SESION_ID,
-        campaign_id: str = "",
-        modo: str = "full",
+        mision: str | None = None,
+        modo: str | None = None,
+        profundidad: str | None = None,
+        restricciones: dict | None = None,
+        campaign_id: str | None = None,
     ) -> None:
         with self._lock:
             if self.estado in (EstadoCampaña.EJECUTANDO, EstadoCampaña.PAUSADO):
                 raise RuntimeError("Ya hay una campaña en curso. Deténla antes de iniciar otra.")
 
             # Reset de estado y señales para una sesión limpia.
+            event_bus.limpiar()
             self._evento_pausa.set()
             self._evento_stop.clear()
             self.estado = EstadoCampaña.EJECUTANDO
+            self.campaign_id = campaign_id or str(uuid.uuid4())
             self.target = target
             self.sesion_id = sesion_id
-            self.campaign_id = campaign_id
+            self.mision = mision
             self.modo = modo
+            self.profundidad = profundidad
+            self.restricciones = restricciones
             self.iteracion_actual = 0
             self.ruta_reporte = None
             self.error = None
+            self.started_at = _utcnow()
+            self.finished_at = None
             self._log_lines = []
+            self._findings = []
 
             self._hilo = threading.Thread(
                 target=self._run,
-                args=(target, sesion_id, campaign_id, modo),
+                args=(target, sesion_id, mision, self.campaign_id, modo),
                 daemon=True,
             )
             self._hilo.start()
@@ -154,23 +190,63 @@ class CampaignManager:
             self._evento_pausa.set()
             self.estado = EstadoCampaña.DETENIDO
 
-    def obtener_logs(self) -> list[str]:
-        """Devuelve una copia de las líneas de log capturadas hasta el momento."""
-        with self._lock:
-            return list(self._log_lines)
-
     def estado_actual(self) -> dict:
         with self._lock:
             return {
+                # Campos del contrato Backend (CampaignStatusResponse)
+                "campaign_id": self.campaign_id or "",
+                "status": _ESTADO_A_STATUS.get(self.estado, "stopped"),
+                "phase": self.modo,
+                "progress": None,
+                "findings": list(self._findings),
+                "logs": [],
+                "started_at": self.started_at,
+                "finished_at": self.finished_at,
+                # Campos internos para el Orquestador
                 "estado": self.estado.value,
                 "target": self.target,
                 "sesion_id": self.sesion_id,
-                "campaign_id": self.campaign_id,
                 "modo": self.modo,
+                "profundidad": self.profundidad,
+                "restricciones": self.restricciones,
                 "iteracion_actual": self.iteracion_actual,
                 "ruta_reporte": self.ruta_reporte,
                 "error": self.error,
             }
+
+    # --- Store de findings en memoria ---
+
+    def add_finding(self, finding: dict) -> str:
+        """Registra un nuevo hallazgo. Devuelve el finding_id generado."""
+        finding_id = str(uuid.uuid4())
+        entry = {
+            "finding_id": finding_id,
+            "campaign_id": self.campaign_id or "",
+            "status": "pending",
+            "remediated": False,
+            **finding,
+        }
+        with self._lock:
+            self._findings.append(entry)
+        return finding_id
+
+    def get_findings(self) -> list[dict]:
+        with self._lock:
+            return list(self._findings)
+
+    def update_finding(self, finding_id: str, updates: dict) -> bool:
+        with self._lock:
+            for f in self._findings:
+                if f.get("finding_id") == finding_id:
+                    f.update(updates)
+                    return True
+        return False
+
+    # --- Logs capturados via TeeWriter ---
+
+    def obtener_logs(self) -> list[str]:
+        with self._lock:
+            return list(self._log_lines)
 
     # --- Cooperación con el hilo de trabajo ---
 
@@ -189,16 +265,28 @@ class CampaignManager:
 
     # --- Hilo de trabajo ---
 
-    def _run(self, target: str, sesion_id: int, campaign_id: str, modo: str) -> None:
+    def _run(
+        self,
+        target: str,
+        sesion_id: int,
+        mision: str | None = None,
+        campaign_id: str | None = None,
+        modo: str | None = None,
+    ) -> None:
         original_stdout = sys.stdout
-        tee = TeeWriter(original_stdout, self._log_lines)
-        sys.stdout = tee
+        sys.stdout = TeeWriter(original_stdout, self._log_lines)
         try:
-            ruta = run_campaign(target, sesion_id=sesion_id, control=self, campaign_id=campaign_id, modo=modo)
+            ruta = run_campaign(
+                target,
+                sesion_id=sesion_id,
+                control=self,
+                mision=mision,
+                campaign_id=campaign_id,
+                modo=modo,
+            )
             with self._lock:
                 self.ruta_reporte = ruta
-                # Si se solicitó detener justo al final (sin checkpoint pendiente
-                # que lo honre), el stop debe prevalecer sobre el fin natural.
+                self.finished_at = _utcnow()
                 self.estado = (
                     EstadoCampaña.DETENIDO
                     if self._evento_stop.is_set()
@@ -206,6 +294,7 @@ class CampaignManager:
                 )
         except CampañaDetenida:
             with self._lock:
+                self.finished_at = _utcnow()
                 self.estado = EstadoCampaña.DETENIDO
         except Exception as e:  # noqa: BLE001 - se reporta vía estado/error
             with self._lock:
@@ -213,10 +302,6 @@ class CampaignManager:
                 self.estado = EstadoCampaña.ERROR
         finally:
             sys.stdout = original_stdout
-            # Vaciar acumulador pendiente del Tee si terminó sin newline final.
-            if tee._accum.strip():
-                with self._lock:
-                    self._log_lines.append(tee._accum.strip())
 
 
 # Instancia única compartida por la API (sesión única por ahora).

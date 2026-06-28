@@ -116,3 +116,13 @@ body {
 .animate-fade-page {
   animation: fadePage 300ms ease-in-out forwards;
 }
+
+/* Pulso de "agente activo" en el mapa de agentes del orquestador */
+@keyframes agentGlow {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent-cyan), 0 0 12px 0 rgba(0, 212, 255, 0.35); }
+  50% { box-shadow: 0 0 0 1px var(--accent-cyan), 0 0 22px 4px rgba(0, 212, 255, 0.65); }
+}
+
+.animate-agent-glow {
+  animation: agentGlow 1.4s ease-in-out infinite;
+}

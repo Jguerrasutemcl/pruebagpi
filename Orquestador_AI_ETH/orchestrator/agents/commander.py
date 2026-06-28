@@ -10,15 +10,16 @@ CommanderAgent no necesita cambios.
 """
 
 import datetime
-
-import requests
+import json
+import urllib.request
 
 from agents.commander_agent import CommanderAgent, Fase
-from agents.explorer import crear_explorador, explorador, decidir_iteracion
+from agents.explorer import crear_explorador, explorador, decidir_iteracion, reporte_parcial
 from agents.exploiter import fase_explotacion
 from agents.judge import crear_juez
 from agents.reporter import crear_reportador
 from config import cargar_objetivo, SESION_ID, BACKEND_URL, ORCHESTRATOR_SERVICE_TOKEN
+from core import event_bus
 from metricas import iniciar_coleccion, finalizar_coleccion, coleccion_activa
 from metricas.reporte import generar_reporte_metricas
 
@@ -59,11 +60,56 @@ SYSTEM_PROMPT_COMMANDER = (
 )
 
 
-def crear_comandante() -> CommanderAgent:
+def crear_comandante(mision: str) -> CommanderAgent:
     """Crea una instancia nueva del Comandante con la misión inyectada."""
-    objetivo = cargar_objetivo()
-    prompt = SYSTEM_PROMPT_COMMANDER + " OBJETIVO DE LA MISIÓN (scope): " + objetivo
+    prompt = SYSTEM_PROMPT_COMMANDER + " OBJETIVO DE LA MISIÓN (scope): " + mision
     return CommanderAgent(prompt)
+
+
+def _enviar_reporte_al_backend(
+    campaign_id: str, target: str, ruta_md: str
+) -> None:
+    """Envía el reporte Markdown generado al Backend para guardarlo en Firestore.
+
+    Usa X-Service-Token para autenticarse. Si el backend no está disponible o no
+    hay token configurado, solo lo registra en los logs sin interrumpir la campaña.
+    """
+    if not campaign_id or not ORCHESTRATOR_SERVICE_TOKEN:
+        print("[COMMANDER] Omitiendo envío al backend: ORCHESTRATOR_SERVICE_TOKEN no configurado.")
+        return
+
+    try:
+        with open(ruta_md, encoding="utf-8") as f:
+            contenido = f.read()
+    except OSError as e:
+        print(f"[COMMANDER] No se pudo leer el reporte {ruta_md}: {e}")
+        return
+
+    payload = {
+        "campaign_id": campaign_id,
+        "target": target,
+        "type": "technical",
+        "summary": {"markdown": contenido},
+        "findings": [],
+        "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+    try:
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            f"{BACKEND_URL}/api/v1/reports",
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+            print(f"[COMMANDER] Reporte enviado al backend. report_id={body.get('report_id')}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[COMMANDER] Error enviando reporte al backend: {e}")
 
 
 # --- Fases concretas --------------------------------------------------------
@@ -78,81 +124,81 @@ def _fase_exploracion(target: str, sesion_id: int = SESION_ID, control=None, con
     print("\n" + "#" * 60)
     print("  FASE: EXPLORACIÓN (RECONOCIMIENTO)")
     print("#" * 60)
+    event_bus.emitir(
+        "phase_start",
+        "commander",
+        {"fase": "exploracion", "descripcion": "Reconocimiento (black-box) del objetivo"},
+        fase="exploracion",
+    )
 
     col = coleccion_activa()
     if col is not None:
         col.set_fase("exploracion")
 
-    agente = crear_explorador(sesion_id=sesion_id, objetivo_target=target)
-    juez = crear_juez()
+    # Import diferido para evitar el ciclo commander <-> campaign_manager.
+    from core.campaign_manager import CampañaDetenida
 
+    mision = (contexto or {}).get("mision", "")
+    agente = crear_explorador(sesion_id=sesion_id, objetivo_target=target, mision=mision)
+    juez = crear_juez(mision)
+
+    # Acumulador compartido: los reportes se registran aquí a medida que se
+    # completan, para que el Reportador pueda incluir los hallazgos parciales
+    # aunque la campaña se detenga a mitad de la fase.
+    acumulador = contexto.setdefault("reportes", []) if contexto is not None else []
     reportes: list[str] = []
     i = 0
-    while not juez.aprueba and i < MAX_ITERACIONES_EXPLORACION:
-        if control is not None:
-            control.checkpoint()
-            control.set_iteracion(i + 1)
+    detenida = False
+    try:
+        while not juez.aprueba and i < MAX_ITERACIONES_EXPLORACION:
+            if control is not None:
+                control.checkpoint()
+                control.set_iteracion(i + 1)
+            if col is not None:
+                col.iniciar_iteracion(i + 1)
+
+            reporte = explorador(agente, target, primera_iteracion=(i == 0), control=control)
+            reportes.append(reporte)
+            acumulador.append(reporte)
+            i += 1
+
+            decidir_iteracion(agente)
+
+            print("\n" + "=" * 50)
+            print("  JUEZ — EVALUACIÓN DEL REPORTE")
+            print("=" * 50)
+            juez.evaluar_reporte(reporte)
+    except CampañaDetenida:
+        # Detención cooperativa: rescata los hallazgos de la iteración en curso
+        # antes de propagar, para que el reporte final no los pierda.
+        detenida = True
+        print("\n[EXPLORACIÓN] Campaña detenida; generando un reporte parcial desde la memoria...")
+        try:
+            parcial = reporte_parcial(agente)
+            if parcial:
+                reportes.append(parcial)
+                acumulador.append(parcial)
+        except Exception as e:  # noqa: BLE001 - el reporte parcial es best-effort
+            print(f"[EXPLORACIÓN] No se pudo generar el reporte parcial: {e}")
+        raise
+    finally:
+        # Deja los hallazgos a disposición de la fase de explotación.
+        if contexto is not None:
+            contexto["memoria_exploracion"] = agente.memoria
+
+        # Cierre de la fase: registra cobertura y motivo de término para las métricas.
         if col is not None:
-            col.iniciar_iteracion(i + 1)
-
-        reporte = explorador(agente, target, primera_iteracion=(i == 0), control=control)
-        reportes.append(reporte)
-        i += 1
-
-        decidir_iteracion(agente)
-
-        print("\n" + "=" * 50)
-        print("  JUEZ — EVALUACIÓN DEL REPORTE")
-        print("=" * 50)
-        juez.evaluar_reporte(reporte)
-
-    # Deja los hallazgos a disposición de la fase de explotación.
-    if contexto is not None:
-        contexto["memoria_exploracion"] = agente.memoria
-
-    # Notifica cada hallazgo y flag al backend para persistencia en Firestore.
-    _campaign_id = (contexto or {}).get("campaign_id", "")
-    _hallazgos = agente.memoria.get("hallazgos", [])
-    _flags = agente.memoria.get("flags", [])
-    if _hallazgos or _flags:
-        print(f"\n[BACKEND] Notificando {len(_hallazgos)} hallazgo(s) y {len(_flags)} flag(s) al backend.")
-    for hallazgo_txt in _hallazgos:
-        _notificar_hallazgo_al_backend(
-            {
-                "title": str(hallazgo_txt)[:120],
-                "description": str(hallazgo_txt),
-                "severity": "info",
-                "type": "reconnaissance",
-            },
-            _campaign_id,
-            target,
-        )
-    for flag in _flags:
-        _notificar_hallazgo_al_backend(
-            {
-                "title": f"Flag: {str(flag)[:100]}",
-                "description": str(flag),
-                "severity": "critical",
-                "type": "flag",
-            },
-            _campaign_id,
-            target,
-        )
-
-    # Cierre de la fase: registra cobertura y motivo de término para las métricas.
-    if col is not None:
-        col.set_memoria_final(agente.memoria)
-        if juez.aprueba:
-            redundancia = "redundan" in (col.ultima_razon_juez or "").lower()
-            motivo = "juez_aprobo_redundancia" if redundancia else "juez_aprobo_exito"
-            exito = not redundancia
-        else:
-            motivo = "limite_iteraciones"
-            exito = False
-        # Encontrar una flag se considera éxito aunque el cierre fuera por otra vía.
-        if agente.memoria.get("flags"):
-            exito = True
-        col.set_resultado(motivo, exito)
+            col.set_memoria_final(agente.memoria)
+            if detenida:
+                col.set_resultado("detenido_usuario", exito=bool(agente.memoria.get("flags")))
+            elif juez.aprueba:
+                redundancia = "redundan" in (col.ultima_razon_juez or "").lower()
+                motivo = "juez_aprobo_redundancia" if redundancia else "juez_aprobo_exito"
+                # Encontrar una flag se considera éxito aunque el cierre fuera por otra vía.
+                exito = (not redundancia) or bool(agente.memoria.get("flags"))
+                col.set_resultado(motivo, exito)
+            else:
+                col.set_resultado("limite_iteraciones", exito=bool(agente.memoria.get("flags")))
 
     return reportes
 
@@ -186,123 +232,125 @@ def construir_fases() -> dict[str, Fase]:
     }
 
 
-# --- Envío de hallazgos y reporte al backend --------------------------------
-
-def _notificar_hallazgo_al_backend(hallazgo: dict, campaign_id: str, target: str) -> None:
-    """Envía un hallazgo individual al backend via POST /api/v1/findings."""
-    try:
-        payload = {
-            "campaign_id": campaign_id or f"local-{SESION_ID}",
-            "target": target,
-            **hallazgo,
-        }
-        url = f"{BACKEND_URL}/api/v1/findings"
-        title = str(hallazgo.get("title", ""))[:60]
-        print(f"[BACKEND] Enviando hallazgo: {title!r} → {url}")
-        resp = requests.post(
-            url,
-            json=payload,
-            headers={"X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN},
-            timeout=15,
-        )
-        if resp.ok:
-            print(f"[BACKEND] Hallazgo guardado. finding_id: {resp.json().get('finding_id')}")
-        else:
-            print(f"[BACKEND] Error al guardar hallazgo: {resp.status_code} — {resp.text[:200]}")
-    except Exception as e:  # noqa: BLE001
-        print(f"[BACKEND] No se pudo enviar el hallazgo: {e}")
-
-
-def _enviar_reporte_al_backend(ruta: str, target: str, campaign_id: str) -> None:
-    """Lee el reporte Markdown generado y lo envía al backend via POST /api/v1/reports."""
-    try:
-        with open(ruta, encoding="utf-8") as f:
-            contenido = f.read()
-
-        payload = {
-            "campaign_id": campaign_id or f"local-{SESION_ID}",
-            "target": target,
-            "type": "technical",
-            "summary": {"markdown": contenido},
-            "findings": [],
-            "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
-        }
-        url = f"{BACKEND_URL}/api/v1/reports"
-        print(f"[BACKEND] Enviando reporte → {url}")
-        print(f"[BACKEND] campaign_id={payload['campaign_id']!r}, target={payload['target']!r}, chars={len(contenido)}")
-        resp = requests.post(
-            url,
-            json=payload,
-            headers={"X-Service-Token": ORCHESTRATOR_SERVICE_TOKEN},
-            timeout=30,
-        )
-        print(f"[BACKEND] Respuesta HTTP {resp.status_code}: {resp.text[:300]}")
-        if resp.ok:
-            print(f"[BACKEND] Reporte guardado. report_id: {resp.json().get('report_id')}")
-        else:
-            print(f"[BACKEND] Error al enviar reporte: {resp.status_code} — {resp.text[:400]}")
-    except Exception as e:  # noqa: BLE001
-        print(f"[BACKEND] No se pudo enviar el reporte al backend: {e}")
-
-
 # --- Flujo de dirección -----------------------------------------------------
 
-def dirigir_campaña(target: str, sesion_id: int = SESION_ID, control=None, campaign_id: str = "", modo: str = "full") -> str:
+def dirigir_campaña(
+    target: str,
+    sesion_id: int = SESION_ID,
+    control=None,
+    mision: str | None = None,
+    campaign_id: str | None = None,
+    modo: str | None = None,
+) -> str:
     """Punto de entrada del MAS: el Commander dirige la campaña de inicio a fin.
 
     `control`, si se entrega, se propaga a las fases para permitir pausar/detener
-    de forma cooperativa. Devuelve la ruta del reporte ejecutivo final.
+    de forma cooperativa. `mision` es el prompt de misión construido desde los
+    parámetros de la campaña; si no se entrega, cae al fallback de `objetivo.txt`.
+    `campaign_id` se usa para enviar el reporte final al Backend.
+    `modo` puede ser "exploration" para omitir la fase de explotación.
+    Devuelve la ruta del reporte ejecutivo final.
     """
-    mision = cargar_objetivo()
+    mision = mision or cargar_objetivo()
     iniciar_coleccion(target, mision)
 
-    comandante = crear_comandante()
+    comandante = crear_comandante(mision)
     reportador = crear_reportador()
     scope = {"target": target, "mision": mision}
 
     print("\n" + "#" * 60)
     print(f"  COMMANDER — INICIO DE CAMPAÑA  (scope: {target})")
     print("#" * 60)
+    event_bus.emitir("campaign_start", "commander", {"target": target, "mision": mision})
+
+    # Import diferido para evitar el ciclo commander <-> campaign_manager.
+    from core.campaign_manager import CampañaDetenida
 
     fases = construir_fases()
 
-    # En modo solo exploración, eliminar la fase de explotación del registro.
-    if modo == "exploration":
-        fases = {k: v for k, v in fases.items() if k != "explotacion"}
-        print("[COMMANDER] Modo 'Solo Exploración' activo — fase de explotación deshabilitada.")
+    # Fix 10: Si el modo es "exploration" o equivalente, eliminar la explotación.
+    if modo in ("exploration", "solo_reconocimiento"):
+        fases.pop("explotacion", None)
+        print(f"[COMMANDER] Modo '{modo}': fase de explotación desactivada.")
 
     completadas: list[str] = []
     reportes: list[str] = []
-    # campaign_id y target disponibles para que las fases puedan notificar al backend.
-    contexto: dict = {"campaign_id": campaign_id, "target": target}
+    # Estado compartido entre fases (p. ej. la KB de exploración). La misión
+    # viaja aquí para que cada fase la inyecte en sus agentes. `reportes` es el
+    # mismo objeto que el acumulador de las fases: así, si la campaña se detiene
+    # a mitad de una fase, los reportes ya completados (y el parcial de rescate)
+    # siguen disponibles para el reporte ejecutivo.
+    contexto: dict = {"mision": mision, "reportes": reportes}
+    detenida = False
+    ruta = None
 
     try:
-        while True:
-            pendientes = [f for nombre, f in fases.items() if nombre not in completadas]
-            if not pendientes:
-                print("\n[COMMANDER] No quedan fases pendientes.")
-                break
+        try:
+            while True:
+                pendientes = [f for nombre, f in fases.items() if nombre not in completadas]
+                if not pendientes:
+                    print("\n[COMMANDER] No quedan fases pendientes.")
+                    break
 
-            nombre = comandante.decidir_fase(scope, pendientes, completadas, reportes)
-            if nombre is None:
-                break
+                nombre = comandante.decidir_fase(scope, pendientes, completadas, reportes)
+                if nombre is None:
+                    break
 
-            fase = fases[nombre]
-            nuevos = fase.ejecutar(target, sesion_id, control, contexto)
-            reportes.extend(nuevos)
-            completadas.append(nombre)
-            # El Commander recibe el reporte de la fase antes de decidir la siguiente.
-            print(f"\n[COMMANDER] Fase '{nombre}' completada — {len(nuevos)} reporte(s) recibido(s).")
+                fase = fases[nombre]
+                # Las fases acumulan sus reportes en contexto["reportes"] (== reportes).
+                nuevos = fase.ejecutar(target, sesion_id, control, contexto)
+                completadas.append(nombre)
+                # El Commander recibe el reporte de la fase antes de decidir la siguiente.
+                print(f"\n[COMMANDER] Fase '{nombre}' completada — {len(nuevos)} reporte(s) recibido(s).")
+                event_bus.emitir(
+                    "phase_end",
+                    "commander",
+                    {"fase": nombre, "reportes_recibidos": len(nuevos)},
+                    fase=nombre,
+                )
+        except CampañaDetenida:
+            # Detención solicitada por el usuario: NO se aborta la campaña. Se cae
+            # al reporte ejecutivo con los hallazgos acumulados hasta ahora.
+            detenida = True
+            print("\n[COMMANDER] Campaña detenida por el usuario; se generará un reporte con los hallazgos hasta ahora.")
+            event_bus.emitir(
+                "campaign_stopped",
+                "commander",
+                {"reportes_acumulados": len(reportes), "fases_completadas": completadas},
+            )
+            col = coleccion_activa()
+            if col is not None and not col.motivo_termino:
+                col.set_resultado("detenido_usuario", exito=False)
 
         print("\n" + "=" * 50)
-        print("  REPORTE EJECUTIVO FINAL")
+        print("  REPORTE EJECUTIVO" + (" (PARCIAL — CAMPAÑA DETENIDA)" if detenida else " FINAL"))
         print("=" * 50)
         ruta = reportador.generar_reporte(reportes, target=target, mision=mision)
         print(f"Reporte guardado en: {ruta}")
-        _enviar_reporte_al_backend(ruta, target, campaign_id)
+        event_bus.emitir(
+            "campaign_end",
+            "commander",
+            {
+                "ruta_reporte": ruta,
+                "fases_completadas": completadas,
+                "total_reportes": len(reportes),
+                "detenida": detenida,
+            },
+        )
+
+        # Fix 8: Enviar el reporte al Backend para persistirlo en Firestore.
+        if campaign_id and ruta:
+            _enviar_reporte_al_backend(campaign_id, target, ruta)
+
         return ruta
     except BaseException as e:
-        # Si la campaña se detiene o falla, deja registro del motivo en las métricas.
+        # Cualquier otro fallo (no la detención cooperativa): deja registro del
+        # motivo en las métricas y propaga.
+        event_bus.emitir(
+            "campaign_aborted",
+            "commander",
+            {"motivo": type(e).__name__, "detalle": str(e)},
+        )
         col = coleccion_activa()
         if col is not None and not col.motivo_termino:
             col.set_resultado(type(e).__name__, exito=False)
