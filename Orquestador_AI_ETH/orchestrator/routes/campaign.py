@@ -312,12 +312,19 @@ def reanudar():
     return campaign_manager.estado_actual()
 
 
-# ── Logs en vivo (Fix 10) ────────────────────────────────────────────────────
+# ── Logs en vivo (Fix 10 / Fix 13) ──────────────────────────────────────────
+# El frontend usa polling incremental con cursor: ?desde=0, ?desde=5, etc.
+# Devuelve los eventos del event_bus (structured JSON) que el CampaignLogFeed
+# puede renderizar, más el total para que el hook avance el cursor.
 
 @router.get("/logs")
-def logs():
-    """Devuelve los logs de stdout capturados durante la campaña activa."""
-    return {"logs": campaign_manager.obtener_logs()}
+def logs(desde: int = Query(0, ge=0)):
+    """Eventos de la campaña desde el cursor indicado (polling incremental)."""
+    from core import event_bus as bus
+    return {
+        "eventos": bus.obtener_desde(desde),
+        "total": bus.total(),
+    }
 
 
 # ── Reportes ejecutivos (locales) ─────────────────────────────────────────────
