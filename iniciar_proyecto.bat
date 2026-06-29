@@ -68,13 +68,13 @@ echo.
 echo  ============================================================
 echo    Todos los servicios iniciandose en ventanas separadas.
 echo.
-echo    Frontend       ->  http://localhost:5173
-echo    Backend        ->  http://localhost:8000
-echo    Orquestador    ->  http://localhost:8001
-echo    Tool Registry  ->  http://localhost:8003
-echo    Tool Executor  ->  http://localhost:8004
-echo    API Gateway    ->  http://localhost:8012
-echo    Redis          ->  localhost:6379
+echo    Frontend       -^>  http://localhost:5173
+echo    Backend        -^>  http://localhost:8000
+echo    Orquestador    -^>  http://localhost:8001
+echo    Tool Registry  -^>  http://localhost:8003
+echo    Tool Executor  -^>  http://localhost:8004
+echo    API Gateway    -^>  http://localhost:8012
+echo    Redis          -^>  localhost:6379
 echo  ============================================================
 echo.
 echo  Puedes cerrar esta ventana cuando quieras.
