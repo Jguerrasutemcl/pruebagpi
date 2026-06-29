@@ -420,3 +420,33 @@ Existen dos directorios frontend (`dani-eth/frontend` y `danieth-backend_runner-
 - **`useCampaignLogs`**: Hook de polling incremental con cursor desde `/campaign/logs`
 
 El `lib/orquestador.ts` fue expandido para incluir `Modo`, `Profundidad`, `Restricciones`, `IniciarCampañaResponse`, `RESTRICCIONES_DEFAULT`, `CampaignEvent`, `LogsResponse` y `obtenerLogs(desde)`.
+
+---
+
+### Fix 13 — AIPentesting: 404 en `/campaign/status` y `/proxy/herramientas`
+
+**Archivos modificados:**
+- `Orquestador_AI_ETH/orchestrator/routes/campaign.py`
+- `Orquestador_AI_ETH/orchestrator/routes/proxy.py` (nuevo)
+- `Orquestador_AI_ETH/orchestrator/main.py`
+
+**Problema A — Rutas de campaña sin campaign_id:**
+El frontend llamaba `GET /campaign/status`, `POST /campaign/pause` y `POST /campaign/stop` (sin campaign_id). El Orquestador solo tenía `GET /campaign/{campaign_id}/status`, `POST /campaign/{campaign_id}/pause` y `POST /campaign/{campaign_id}/stop`. FastAPI devolvía 404 porque no había match exacto.
+
+**Corrección A:** Se añadieron aliases sin campaign_id en `routes/campaign.py` ANTES de las rutas con `{campaign_id}`, para que FastAPI los resuelva primero:
+```
+GET  /campaign/status  →  campaign_manager.estado_actual()
+POST /campaign/pause   →  campaign_manager.pausar()
+POST /campaign/stop    →  campaign_manager.detener()
+```
+
+**Problema B — `/proxy/*` no existía en ningún servicio accesible por el frontend:**
+El frontend llamaba `GET /proxy/herramientas`, `POST /proxy/ejecutar` y `GET /proxy/tareas/{id}`. Estas rutas no existen en el Orquestador (8001) ni en el backend (8000). El Tool Registry (8003) y Tool Executor (8004) tienen las rutas reales pero no están configurados con CORS para el navegador.
+
+**Corrección B:** Se creó `routes/proxy.py` en el Orquestador, que actúa como proxy HTTP hacia los microservicios del runner:
+- `GET  /proxy/herramientas`       → Registry (8003) `GET /herramientas/`
+- `POST /proxy/ejecutar`           → Executor (8004) `POST /ejecutar/`
+- `GET  /proxy/tareas/{tarea_id}`  → Executor (8004) `GET /ejecutar/tareas/{id}`
+- `GET  /proxy/tareas`             → stub, devuelve `{ tareas: [], total: 0 }`
+
+El router fue registrado en `main.py` con `app.include_router(proxy_router)`.

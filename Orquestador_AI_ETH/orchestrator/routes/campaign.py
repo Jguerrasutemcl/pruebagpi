@@ -191,6 +191,36 @@ def iniciar(payload: IniciarCampaña):
     return respuesta
 
 
+# ── Aliases sin campaign_id (para el frontend directo) ────────────────────────
+# Se registran ANTES que las rutas con {campaign_id} para que FastAPI no trate
+# "status", "pause" o "stop" como un campaign_id.
+
+@router.get("/status")
+def estado_directo():
+    """Estado actual de la campaña (alias sin campaign_id)."""
+    return campaign_manager.estado_actual()
+
+
+@router.post("/pause")
+def pausar_directo():
+    """Pausa la campaña en curso (alias sin campaign_id)."""
+    try:
+        campaign_manager.pausar()
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return campaign_manager.estado_actual()
+
+
+@router.post("/stop")
+def detener_directo():
+    """Detiene la campaña en curso (alias sin campaign_id)."""
+    try:
+        campaign_manager.detener()
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return campaign_manager.estado_actual()
+
+
 # ── Control con campaign_id (Fix 2) ───────────────────────────────────────────
 
 @router.post("/{campaign_id}/pause")
