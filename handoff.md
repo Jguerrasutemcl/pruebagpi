@@ -450,3 +450,60 @@ El frontend llamaba `GET /proxy/herramientas`, `POST /proxy/ejecutar` y `GET /pr
 - `GET  /proxy/tareas`             → stub, devuelve `{ tareas: [], total: 0 }`
 
 El router fue registrado en `main.py` con `app.include_router(proxy_router)`.
+
+---
+
+### Fix 14 — Timeline en vivo vacía y polling de estado congelado
+
+**Archivos modificados:**
+- `Orquestador_AI_ETH/orchestrator/routes/campaign.py`
+- `dani-eth/frontend/src/pages/AIPentesting.tsx`
+
+**Problema A — `/campaign/logs` devolvía formato incorrecto:**
+El endpoint devolvía `{ "logs": ["línea1", ...] }` (stdout crudo del TeeWriter). El hook `useCampaignLogs` esperaba `{ "eventos": [...CampaignEvent], "total": N }` para el polling incremental con cursor. Resultado: `eventos` era `undefined`, `CampaignLogFeed` nunca renderizaba nada.
+
+**Corrección A:** El endpoint ahora lee del `event_bus` con soporte de cursor `?desde=N`:
+```python
+@router.get("/logs")
+def logs(desde: int = Query(0, ge=0)):
+    return {"eventos": bus.obtener_desde(desde), "total": bus.total()}
+```
+
+**Problema B — Estado congelado cuando la campaña termina sola:**
+El polling de estado (`setInterval` cada 3 s) se paraba cuando `activo = false`. Si el Orquestador terminaba de forma natural (sin que el usuario hiciera click en Detener), la UI quedaba congelada mostrando el último estado.
+
+**Corrección B:** El polling ahora corre siempre: 3 s cuando activo, 6 s cuando no.
+
+**Mejoras UX añadidas:**
+- Banner amarillo cuando `estado === 'pausado'` explicando que la pausa es cooperativa (el agente termina la herramienta actual antes de bloquearse)
+- Tooltip en botón Reanudar cuando `estado === 'detenido'` indicando que hay que iniciar una nueva campaña
+- `BotonAccion` acepta prop `title` para tooltips nativos
+
+---
+
+### Fix 15 — Reportes ejecutivos nunca generados ni enviados a Firestore/Supabase
+
+**Archivos modificados:**
+- `Orquestador_AI_ETH/orchestrator/agents/reporter_agent.py`
+- `Orquestador_AI_ETH/orchestrator/.env` (creado, no va a git)
+
+**Problema A — `orchestrator/reports/` no existía:**
+`reporter_agent.py` hacía `open(ruta, "w")` asumiendo que el directorio `reports/` existía. Al no existir lanzaba `FileNotFoundError`, cortando la cadena completa: sin reporte no hay envío al Backend, sin envío nada llega a Firestore/Supabase, y `Reports.tsx` muestra vacío.
+
+**Corrección A:** `os.makedirs(REPORTS_DIR, exist_ok=True)` antes de escribir el archivo.
+
+**Problema B — Orquestador sin `.env` → token vacío → 403 del Backend:**
+El Orquestador no tenía archivo `.env`. `ORCHESTRATOR_SERVICE_TOKEN` quedaba vacío (`""`), lo que causaba que el Backend rechazara el `POST /api/v1/reports` con 403. El Backend tiene el token configurado como `pon-aqui-una-clave-secreta-larga` en su `.env`.
+
+**Corrección B:** Creado `Orquestador_AI_ETH/orchestrator/.env` con el mismo token. El `.gitignore` raíz ya cubre `**/.env`.
+
+**Flujo completo una vez corregido:**
+```
+Campaña termina → reporter_agent guarda reports/reporte_<ts>.md
+               → commander.py POST /api/v1/reports (con X-Service-Token correcto)
+               → Backend guarda en Firestore + sube .md a Supabase Storage
+               → Reports.tsx lista desde Firestore (/api/v1/reports)
+```
+
+**Aclaración — "Logs de ejecución" en AIPentesting:**
+El panel "📄 Execution Logs" al final de la página AI Pentesting muestra únicamente logs de ejecución **manual** de herramientas (cuando el usuario elige una herramienta del panel y la ejecuta él mismo). Los logs del orquestador autónomo aparecen en el `CampaignLogFeed` (timeline). Son dos sistemas separados.
