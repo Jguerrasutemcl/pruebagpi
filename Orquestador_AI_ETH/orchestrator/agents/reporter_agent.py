@@ -33,6 +33,7 @@ class ReporterAgent(BaseAgent):
             f"y contenido de páginas web leídas con curl."
         )
 
+        os.makedirs(REPORTS_DIR, exist_ok=True)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         nombre_md = f"reporte_{timestamp}.md"
         ruta = os.path.join(REPORTS_DIR, nombre_md)
