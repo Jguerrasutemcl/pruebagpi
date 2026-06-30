@@ -60,6 +60,9 @@ class TeeWriter:
         return len(text)
 
     def flush(self) -> None:
+        if self._buf.strip():
+            self._lines.append(self._buf.rstrip())
+            self._buf = ""
         self._original.flush()
 
     def __getattr__(self, name):
@@ -301,6 +304,7 @@ class CampaignManager:
                 self.error = str(e)
                 self.estado = EstadoCampaña.ERROR
         finally:
+            sys.stdout.flush()
             sys.stdout = original_stdout
 
 

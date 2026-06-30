@@ -33,6 +33,14 @@ class ReporterAgent(BaseAgent):
             f"y contenido de páginas web leídas con curl."
         )
 
+        if reporte is None:
+            reporte = (
+                "# Reporte ejecutivo — ERROR DE GENERACIÓN\n\n"
+                "El modelo no devolvió respuesta al sintetizar el reporte final.\n"
+                "Los reportes de iteración individuales están disponibles en los logs de campaña.\n\n"
+                "## Reportes de iteración (raw)\n\n" + contenido
+            )
+
         os.makedirs(REPORTS_DIR, exist_ok=True)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         nombre_md = f"reporte_{timestamp}.md"
